@@ -88,9 +88,18 @@ methp <- function(dat, spatial=TRUE, spatialMethod="kernel",
     }
 
     # Background removal
-	if (bgSubtract) {
-    	if (verbose) cat("Background removal\n")
-    	dat <- bgAdjustBgp(dat, cluster=cl)
+	if (bgSubtract!=FALSE) {
+		if (bgSubtract=="rma") {
+	    	if (verbose) cat("Background removal (rma)\n")
+			require("affy")
+			pms <- pm(dat)
+			pms[,,1] <- bg.adjust(pms[,,1])
+			pms[,,2] <- bg.adjust(pms[,,2])
+			pm(dat) <- pms
+		} else {
+	    	if (verbose) cat("Background removal\n")
+			dat <- bgAdjustBgp(dat, cluster=cl)
+		}
 	}
 	if(!is.null(plotDensity)) {
 		plotDensity(dat, main="2. After spatial & bg", cols=cols, lwd=lwd)
