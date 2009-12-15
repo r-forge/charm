@@ -13,7 +13,7 @@ methp <- function(dat, spatial=TRUE, spatialMethod="kernel",
 		controlProbes=c("CONTROL_PROBES", "CONTROL_REGIONS"),
 		controlIndex=NULL, 
 		ctrlNoCpGWindow=NULL, subject=NULL,
-		commonMethPercentParams=TRUE,
+		commonMethPercentParams=NULL,
 		verbose=TRUE, cluster=NULL, returnM=FALSE, 
 		plotDensity=NULL, plotDensityCols=NULL,
 		duplicate=TRUE) {
@@ -60,16 +60,16 @@ methp <- function(dat, spatial=TRUE, spatialMethod="kernel",
 	} else {
 		if (betweenSampleNorm=="quantile") {
 			bs <- list(m="allQuantiles", untreated="none", enriched="none")
-			commonMethPercentParams <- TRUE
+			if(is.null(commonMethPercentParams)) commonMethPercentParams <- TRUE
 		} else if (betweenSampleNorm=="sqn") {
 			bs <- list(m="none", untreated="complete", enriched="sqn")
-			commonMethPercentParams <- FALSE
+			if(is.null(commonMethPercentParams)) commonMethPercentParams <- FALSE
 		} else if (betweenSampleNorm=="sqn99") {
 			bs <- list(m="99", untreated="complete", enriched="sqn")
-			commonMethPercentParams <- FALSE
+			if(is.null(commonMethPercentParams)) commonMethPercentParams <- FALSE
 		} else if (betweenSampleNorm=="none") {
 			bs <- list(m="none", untreated="none", enriched="none")
-			commonMethPercentParams <- FALSE
+			if(is.null(commonMethPercentParams)) commonMethPercentParams <- FALSE
 		}
 	}	
 	
@@ -88,18 +88,9 @@ methp <- function(dat, spatial=TRUE, spatialMethod="kernel",
     }
 
     # Background removal
-	if (bgSubtract!=FALSE) {
-		if (bgSubtract=="rma") {
-	    	if (verbose) cat("Background removal (rma)\n")
-			require("affy")
-			pms <- pm(dat)
-			pms[,,1] <- bg.adjust(pms[,,1])
-			pms[,,2] <- bg.adjust(pms[,,2])
-			pm(dat) <- pms
-		} else {
-	    	if (verbose) cat("Background removal\n")
-			dat <- bgAdjustBgp(dat, cluster=cl)
-		}
+	if (bgSubtract) {
+    	if (verbose) cat("Background removal\n")
+		dat <- bgAdjustBgp(dat, cluster=cl)
 	}
 	if(!is.null(plotDensity)) {
 		plotDensity(dat, main="2. After spatial & bg", cols=cols, lwd=lwd)
@@ -171,7 +162,7 @@ methp <- function(dat, spatial=TRUE, spatialMethod="kernel",
 }
 
 
-readCharm <- function(files, type=rep("unspecified", length(files)), path=".", ut="_532.xys", md="_635.xys", sampleNames=NULL, saveRam=TRUE, ...) {
+readCharm <- function(files, type=rep("unspecified", length(files)), path=".", ut="_532.xys", md="_635.xys", sampleNames=NULL, saveRam=FALSE, ...) {
     files <- as.character(files)
     o <- order(files)
     files <- files[o]
@@ -318,7 +309,11 @@ predictLoess <- function(fit, newdata, approx=TRUE, breaks=1000) {
 		binMean <- tapply(newdata, newdataBin, mean)
 		isNa <- which(is.na(binMean))
 		adj <- rep(NA, length(binMean))
-		adj[-isNa] <- predict(fit, newdata = binMean[-isNa])
+		if (length(isNa)==0) {
+			adj <- predict(fit, newdata = binMean)
+		} else {
+			adj[-isNa] <- predict(fit, newdata = binMean[-isNa])
+		}
 		ret <- adj[newdataBin]
 	} else {
 		ret <- predict(fit, newdata=newdata)

@@ -1,4 +1,8 @@
-2009-12-10 v0.9.13
+2009-12-14 v0.9.14
+  Fix in predictLoess where NAs were returned if using option approx=TRUE
+   and no bins were empty
+  The passed option for commonMethPercentParams is only overridden when NULL
+  Set saveRam default to FALSE for readCharm
 
 2009-12-09 v0.9.12
   Added dmrFdr and the imports pi0.est, qvalue.cal from siggenes, 
