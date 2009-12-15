@@ -1,3 +1,6 @@
+v0.9.17
+dmrFinder now returns filter and ws, and these values are used by dmrFdr
+
 v0.9.16
 dmrFinder now returns cutoff, and this value is used by dmrFdr
 

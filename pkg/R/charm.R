@@ -2025,7 +2025,8 @@ dmrFinder <- function(eset=NULL,groups,p=NULL,l=NULL,chr=NULL,pos=NULL,pns=NULL,
   }
   if(verbose) cat("\nDone\n")
   return(list(tabs=res,p=p,chr=chr,pos=pos,pns=pns,controlIndex=controlIndex,
-              gm=lm,groups=groups,args=args,cutoff=cutoff,package=package))
+              gm=lm,groups=groups,args=args,cutoff=cutoff,
+			  filter=filter,ws=ws,package=package))
 }
 
 dmrFdr <- function(dmr, compare=1, numPerms=1000, seed=NULL, verbose=TRUE) {
@@ -2060,7 +2061,8 @@ dmrFdr <- function(dmr, compare=1, numPerms=1000, seed=NULL, verbose=TRUE) {
 		groups <- rep("grp2", n)
 		groups[grp1[i,]] <- "grp1"
 		st <- system.time(dmrPerm <- dmrFinder(dmr$package, p=p, 
-			groups=groups, cutoff=dmr$cutoff, verbose=FALSE))[3]
+			groups=groups, cutoff=dmr$cutoff, 
+			filter=dmr$filter, ws=dmr$ws, verbose=FALSE))[3]
 		if (verbose & (i %in% round(seq(1, numPerms, length.out=10)))) {
 			cat(i, "/", numPerms, " (", prettyTime((numPerms-i)*st), 
 				" remaining)\n", sep="")
