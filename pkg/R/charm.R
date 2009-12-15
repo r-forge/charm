@@ -1923,6 +1923,7 @@ dmrFinder <- function(eset=NULL,groups,p=NULL,l=NULL,chr=NULL,pos=NULL,pns=NULL,
       if(length(unique(lens))!=1)
         stop("p, l, chr, pos, and/or pns are incompatible.")
       stopifnot(length(groups)==max(ncol(p), ncol(l)))
+	  index <- !is.na(chr) & !is.na(pos) & !is.na(pns)
   } else if (is.character(eset)) {
 	  pdInfo=get(eset)
 	  class(pdInfo)="TilingFeatureSet" # Trick oligo so that pmChr, pmPosition, probeNames work
@@ -1945,7 +1946,7 @@ dmrFinder <- function(eset=NULL,groups,p=NULL,l=NULL,chr=NULL,pos=NULL,pns=NULL,
       }
   } else {
       stopifnot(length(groups)==length(eset))
-      if(is.null(p)){
+      if(is.null(p) & is.null(l)){
 		p <- methp(eset, bgSubtract=bgSubtract,
 					withinSampleNorm=withinSampleNorm, binSize=binSize, numSegments=numSegments,
 					betweenSampleNorm=betweenSampleNorm,
@@ -2024,7 +2025,7 @@ dmrFinder <- function(eset=NULL,groups,p=NULL,l=NULL,chr=NULL,pos=NULL,pns=NULL,
   }
   if(verbose) cat("\nDone\n")
   return(list(tabs=res,p=p,chr=chr,pos=pos,pns=pns,controlIndex=controlIndex,
-              gm=lm,groups=groups,args=args,package=package))
+              gm=lm,groups=groups,args=args,cutoff=cutoff,package=package))
 }
 
 dmrFdr <- function(dmr, compare=1, numPerms=1000, seed=NULL, verbose=TRUE) {
@@ -2059,7 +2060,7 @@ dmrFdr <- function(dmr, compare=1, numPerms=1000, seed=NULL, verbose=TRUE) {
 		groups <- rep("grp2", n)
 		groups[grp1[i,]] <- "grp1"
 		st <- system.time(dmrPerm <- dmrFinder(dmr$package, p=p, 
-			groups=groups, verbose=FALSE))[3]
+			groups=groups, cutoff=dmr$cutoff, verbose=FALSE))[3]
 		if (verbose & (i %in% round(seq(1, numPerms, length.out=10)))) {
 			cat(i, "/", numPerms, " (", prettyTime((numPerms-i)*st), 
 				" remaining)\n", sep="")
