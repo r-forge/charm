@@ -1,7 +1,7 @@
 Package: charm
 Type: Package
 Title: Analysis of DNA methylation data from CHARM microarrays
-Version: 0.9.14
+Version: 0.9.15
 Date: 2009-12-14
 Author: Martin Aryee, Peter Murakami, Srinivasan Yegnasubramanian, Rafael Irizarry
 Maintainer: Martin Aryee <aryee@jhu.edu>

@@ -1909,19 +1909,20 @@ dmrFinder <- function(eset=NULL,groups,p=NULL,l=NULL,chr=NULL,pos=NULL,pns=NULL,
 	withinSampleNorm=withinSampleNorm, minQCScore=minQCScore,
             controlProbes=controlProbes, cutoff=cutoff)
 
-  #dmrFinder must be given either eset or p,l,chr,pos,pns,controlIndex,Indexes and
-  #package.  If eset is supplied then all the latter will be taken from it (with any
-  #that were given as arguments being ignored) (except p).
-  #l=logit(p). Indexes=split(seq(along=pns),pns).
+  # dmrFinder must be given either eset or p/l,chr,pos,pns, and controlIndex
+  # If eset is supplied then all the latter will be taken from it (with any
+  # that were given as arguments being ignored) (except p).
+  # l=logit(p). Indexes=split(seq(along=pns),pns).
   if(is.null(eset)){
-      args = c("p","l","chr","pos","pns","controlIndex","Indexes","package")
+      if (is.null("p") & is.null("l")) stop("p or l must be supplied.")
+      args = c("chr","pos","pns","controlIndex")
       nulls = sapply(args,function(x) is.null(get(x)))
       if(any(nulls))
         stop(paste("The following arguments are missing:", paste(args[nulls], collapse=", ")))
       lens = c( nrow(p), nrow(l), length(chr), length(pos), length(pns) ) 
       if(length(unique(lens))!=1)
         stop("p, l, chr, pos, and/or pns are incompatible.")
-      stopifnot(length(groups)==ncol(p))
+      stopifnot(length(groups)==max(ncol(p), ncol(l)))
   } else if (is.character(eset)) {
 	  pdInfo=get(eset)
 	  class(pdInfo)="TilingFeatureSet" # Trick oligo so that pmChr, pmPosition, probeNames work
@@ -1942,9 +1943,6 @@ dmrFinder <- function(eset=NULL,groups,p=NULL,l=NULL,chr=NULL,pos=NULL,pns=NULL,
       if(package=="pd.feinberg.hg18.me.hx1"){
       #add some code here to break up regions with gaps of >300 bp
       }
-      #The next 2 lines take 10 seconds:
-      Indexes=split(seq(along=pns),pns)
-      l=log(p)-log(1-p)	
   } else {
       stopifnot(length(groups)==length(eset))
       if(is.null(p)){
@@ -1973,11 +1971,11 @@ dmrFinder <- function(eset=NULL,groups,p=NULL,l=NULL,chr=NULL,pos=NULL,pns=NULL,
       if(package=="pd.feinberg.hg18.me.hx1"){
       #add some code here to break up regions with gaps of >300 bp
       }
-      
-      #The next 2 lines take 10 seconds:
-      Indexes=split(seq(along=pns),pns)
-      l=log(p)-log(1-p)
   }
+  if(is.null(l)) {
+	  l=log(p)-log(1-p)	
+  }
+  Indexes=split(seq(along=pns),pns)
 
   tog = get.tog(l=l,groups=groups,compare=compare,verbose=verbose)
   lm=tog$lm
@@ -2073,7 +2071,7 @@ dmrFdr <- function(dmr, compare=1, numPerms=1000, seed=NULL, verbose=TRUE) {
 	fn <- ecdf(nullDist)
 	pval <- 1-fn(dmr$tabs[[compare]]$area)
 	pi0<-pi0.est(pval)$p0
-	qval<-qvalue.cal(pval, pi0, version=2)
+	qval<-qvalue.cal(pval, pi0)
 	dmr$tabs[[compare]] <- cbind(dmr$tabs[[compare]], pval, qval)
 	return(dmr)
 }
