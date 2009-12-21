@@ -1,3 +1,13 @@
+v0.9.18
+Changed default binSize for affy affinity calculations to 500
+dmrFinder now discards probes where chr, pos or pns are NA
+dmrFinder now returns index
+makeX now accepts probe sequences as an alternative to a FeatureSet
+Added organism="hg19" option to annotateDMRs
+Fixed bug in dmrFdr that caused errors when more than two groups exist
+Added the sdBins option to dmrFinder
+dmrFdr runs the maximum number of possible permutations when a larger number than this is requested (instead of giving an error.)
+
 v0.9.17
 dmrFinder now returns filter and ws, and these values are used by dmrFdr
 

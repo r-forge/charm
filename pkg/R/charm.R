@@ -7,7 +7,7 @@
 methp <- function(dat, spatial=TRUE, spatialMethod="kernel", 
 		spatial1d=NULL, spatial2d=NULL, 
 		bgSubtract=TRUE,
-		withinSampleNorm="loess", binSize=250, numSegments=3, useTot=TRUE,
+		withinSampleNorm="loess", binSize=500, numSegments=3, useTot=TRUE,
 		betweenSampleNorm="quantile", msqn=FALSE,
         minQCScore=NULL, 
 		controlProbes=c("CONTROL_PROBES", "CONTROL_REGIONS"),
@@ -323,7 +323,7 @@ predictLoess <- function(fit, newdata, approx=TRUE, breaks=1000) {
 	
 
 
-affinityBin <- function(dat, M=NULL, controlIndex=NULL, binSize=250,
+affinityBin <- function(dat, M=NULL, controlIndex=NULL, binSize=500,
 		modelChannel="M", controlProbes=c("CONTROL_PROBES", "CONTROL_REGIONS"),
 		numSegments=3, window=NULL, subject=NULL, useTot=TRUE, verbose=FALSE) {
 	if (is.null(controlIndex)) {
@@ -367,7 +367,7 @@ regionFilter <- function(x, region, f) {
 
 normalizeWithinSamples <- function (dat, method = "loess", 
 	controlProbes = "CONTROL_REGIONS", 
-	controlIndex = NULL, numSegments=3, bins=NULL, binSize=250,
+	controlIndex = NULL, numSegments=3, bins=NULL, binSize=500,
 	approx=TRUE, breaks=1000, useTot=TRUE,
 	cluster=NULL, verbose=FALSE) {
     #if (method=="gc") {
@@ -588,7 +588,9 @@ getMap <- function (x, m, affinity=NULL, df = 5)
 
 
 makeX <- function(dat, idx=NULL, window="probe", type="pm", segmentSize=NULL, numSegments=1, letters=c("A", "C", "G"), subject=NULL) {
-    if (type=="bg") {
+    if (class(dat)=="DNAStringSet"){
+		seqs <- dat
+	} else if (type=="bg") {
         #seqs = as.character(bgSequence(dat))
 		seqs = bgSequence(dat)
     } else if (type=="pm"){
@@ -613,7 +615,7 @@ makeX <- function(dat, idx=NULL, window="probe", type="pm", segmentSize=NULL, nu
 			}	
     	}
 	} else {
-        stop("type must be 'pm' or 'bg'")
+        stop("You must either provide probe sequences or type must be 'pm' or 'bg'")
     }
     if (!is.null(idx)) seqs <- seqs[idx]
     d <- DNAStringSet(seqs)
@@ -1293,7 +1295,7 @@ closestTSS <- function(chr, start, end, genome="hg18", annotationTextFile=FALSE)
     }))
 }
 
-annotateDMRs <-function(tab, organism="human", minCpG=2, minProbes=3, minPDiff=0, minArea=0, maxRows=-1, sortCol=NULL) {
+annotateDMRs <-function(tab, organism="hg18", minCpG=2, minProbes=3, minPDiff=0, minArea=0, maxRows=-1, sortCol=NULL) {
 	if (!is.null(sortCol)) {
 		o <- order(tab[,sortCol], decreasing=TRUE)
 		tab <- tab[o,]
@@ -1304,7 +1306,7 @@ annotateDMRs <-function(tab, organism="human", minCpG=2, minProbes=3, minPDiff=0
 		tab <- tab[-idx,]
 	}
     annotationTextFile <- FALSE
-    if (organism=="human") {
+    if (organism=="hg18") {
         if (!require(BSgenome) & !require(BSgenome.Hsapiens.UCSC.hg18))
             stop("Please install the 'BSgenome' and 'BSgenome.Hsapiens.UCSC.hg18' packages")
         if (!require(org.Hs.eg.db))
@@ -1313,7 +1315,16 @@ annotateDMRs <-function(tab, organism="human", minCpG=2, minProbes=3, minPDiff=0
         genome="hg18"
         entrez2NameMap <- org.Hs.egGENENAME 
         refseq2EntrezMap <- org.Hs.egREFSEQ2EG
-    } else if (organism=="mouse") {
+    } else if (organism=="hg19") {
+	        if (!require(BSgenome) & !require(BSgenome.Hsapiens.UCSC.hg19))
+	            stop("Please install the 'BSgenome' and 'BSgenome.Hsapiens.UCSC.hg19' packages")
+	        if (!require(org.Hs.eg.db))
+	            stop("Please install the 'org.Hs.eg.db' package")
+	        subject <- Hsapiens
+	        genome="hg19"
+	        entrez2NameMap <- org.Hs.egGENENAME 
+	        refseq2EntrezMap <- org.Hs.egREFSEQ2EG
+	 } else if (organism=="mouse") {
         if (!require(BSgenome) & !require(BSgenome.Mmusculus.UCSC.mm8))
             stop("Please install the 'BSgenome' and 'BSgenome.Mmusculus.UCSC.mm8' packages")
         if (!require(org.Mm.eg.db))
@@ -1892,7 +1903,8 @@ get.tt <- function(lm,ls,ns,filter,Indexes,COMPS,ws,verbose){
 
 
 dmrFinder <- function(eset=NULL,groups,p=NULL,l=NULL,chr=NULL,pos=NULL,pns=NULL,
-                      controlIndex=NULL,Indexes=NULL,filter=NULL,package=NULL,ws=7,
+					  sdBins=NULL, controlIndex=NULL,Indexes=NULL, 
+					  filter=NULL,package=NULL,ws=7,
                       verbose=TRUE,compare="all",
 					  bgSubtract=TRUE,
 		      		  withinSampleNorm="loess", binSize=500, numSegments=3,
@@ -1923,7 +1935,15 @@ dmrFinder <- function(eset=NULL,groups,p=NULL,l=NULL,chr=NULL,pos=NULL,pns=NULL,
       if(length(unique(lens))!=1)
         stop("p, l, chr, pos, and/or pns are incompatible.")
       stopifnot(length(groups)==max(ncol(p), ncol(l)))
-	  index <- !is.na(chr) & !is.na(pos) & !is.na(pns)
+	  index <- which(!is.na(chr) & !is.na(pos) & !is.na(pns))
+      index=index[order(chr[index],pos[index])]
+      chr=chr[index]
+      pos=pos[index]
+      pns=pns[index]
+      controlIndex=which(index%in%controlIndex)
+      if(!is.null(sdBins)) sdBins<-sdBins[index]
+      if(!is.null(p)) p=p[index,]
+      if(!is.null(l)) l=l[index,]
   } else if (is.character(eset)) {
 	  pdInfo=get(eset)
 	  class(pdInfo)="TilingFeatureSet" # Trick oligo so that pmChr, pmPosition, probeNames work
@@ -1937,6 +1957,7 @@ dmrFinder <- function(eset=NULL,groups,p=NULL,l=NULL,chr=NULL,pos=NULL,pns=NULL,
       p=p[index,]
 	  controlIndex <- which(getContainer(pdInfo) %in% controlProbes)
       controlIndex=which(index%in%controlIndex)
+      if(!is.null(sdBins)) sdBins<-sdBins[index]
       package = eset
       if(package=="pd.feinberg.mm8.me.hx1"){
       #add some code here to break up regions with gaps of >300 bp
@@ -1964,7 +1985,7 @@ dmrFinder <- function(eset=NULL,groups,p=NULL,l=NULL,chr=NULL,pos=NULL,pns=NULL,
 
       controlIndex=getControlIndex(eset, controlProbes=controlProbes)
       controlIndex=which(index%in%controlIndex)
-
+      if(!is.null(sdBins)) sdBins<-sdBins[index]
       package = annotation(eset)
       if(package=="pd.feinberg.mm8.me.hx1"){
       #add some code here to break up regions with gaps of >300 bp
@@ -1993,16 +2014,26 @@ dmrFinder <- function(eset=NULL,groups,p=NULL,l=NULL,chr=NULL,pos=NULL,pns=NULL,
       k = COMPS[r,2]
       if(verbose) cat("\n",colnames(tt)[r])
       DF=ifelse(ns[j]==1 & ns[k]==1, 1, ns[j]+ns[k]-2)
-      K=mad(tt[,r], na.rm=TRUE)*qt(cutoff,DF)
+	
+	  if (length(sdBins)==0) {
+	      K=mad(tt[,r], na.rm=TRUE)*qt(cutoff,DF)	
+	  }	else {
+		  s <- tapply(tt[,r], sdBins, mad, na.rm=TRUE)
+		  K=s[sdBins]*qt(cutoff,DF)	
+	  }
       LAST=0
       segmentation=vector("numeric",nrow(tt))
       type=vector("numeric",nrow(tt))
-      
       for(i in seq(along=Indexes)){
         if(verbose) if(i%%1000==0) cat(".")
         Index=Indexes[[i]]
         y=tt[Index,r]
-        tmp=sign(y)*as.numeric(abs(y)>K)
+		if(length(sdBins)==0) {
+			tmp=sign(y)*as.numeric(abs(y)>K)	
+		} else {
+			Ki <- K[Index]
+			tmp=sign(y)*as.numeric(abs(y)>Ki)	
+		}
         tmp2=cumsum(c(1,diff(tmp)!=0))+LAST
         segmentation[Index]=tmp2
         type[Index]=tmp
@@ -2024,7 +2055,8 @@ dmrFinder <- function(eset=NULL,groups,p=NULL,l=NULL,chr=NULL,pos=NULL,pns=NULL,
       res[[r]]=res[[r]][order(-area),]
   }
   if(verbose) cat("\nDone\n")
-  return(list(tabs=res,p=p,chr=chr,pos=pos,pns=pns,controlIndex=controlIndex,
+  return(list(tabs=res,p=p,chr=chr,pos=pos,pns=pns,
+		      index=index,controlIndex=controlIndex,
               gm=lm,groups=groups,args=args,cutoff=cutoff,
 			  filter=filter,ws=ws,package=package))
 }
@@ -2046,10 +2078,13 @@ dmrFdr <- function(dmr, compare=1, numPerms=1000, seed=NULL, verbose=TRUE) {
 	keep <- dmr$groups %in% unlist(strsplit(compare, "-"))
 	p <- p[,keep]
 	n <- sum(keep)
-	n1 <- sum(dmr$groups==dmr$groups[1])
+	n1 <- sum(dmr$groups==unlist(strsplit(compare, "-"))[1])
 	maxPerms <- choose(n, n1)
 	if (numPerms=="all") numPerms <- maxPerms
-	if (numPerms>maxPerms) stop("Given the sample sizes in the two groups the maximum number of permutations is ", maxPerms, ". Please rerun with a lower value for numPerms.")
+	if (numPerms>maxPerms) {
+		cat("Given the sample sizes in the two groups the maximum number of permutations is ", maxPerms, ".\n")
+		numPerms <- maxPerms
+	} 
 
 	## Reshuffled group label DMRs
 	if (!is.null(seed)) set.seed(seed)
