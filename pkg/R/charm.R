@@ -2045,17 +2045,30 @@ dmrFinder <- function(eset=NULL,groups,p=NULL,l=NULL,chr=NULL,pos=NULL,pns=NULL,
            chr=tapply(chr[Index],segmentation[Index],function(x) x[1]),
            start=tapply(pos[Index],segmentation[Index],min),
            end=tapply(pos[Index],segmentation[Index],max),
-           p1=tapply(1/(1+exp(-lm[Index,j])),segmentation[Index],mean),
-           p2=tapply(1/(1+exp(-lm[Index,k])),segmentation[Index],mean),
+           p1=NA,
+           p2=NA,
            regionName=tapply(pns[Index],segmentation[Index],function(x) x[1]),
            indexStart=tapply(Index,segmentation[Index],min),
            indexEnd=tapply(Index,segmentation[Index],max))
-      area=abs(res[[r]]$p2-res[[r]]$p1)*(res[[r]]$indexEnd-res[[r]]$indexStart+1)
-      res[[r]]$area=area
+	  if (is.null(p)) { #  We return log-ratios
+		  colnames(res[[r]]) <- sub("p1", "m1", colnames(res[[r]]))
+		  colnames(res[[r]]) <- sub("p2", "m2", colnames(res[[r]]))
+	      res[[r]]$m1=tapply(lm[Index,j],segmentation[Index],mean)
+          res[[r]]$m2=tapply(lm[Index,k],segmentation[Index],mean)
+    	  length=res[[r]]$indexEnd-res[[r]]$indexStart+1
+		  area=abs(res[[r]]$m2-res[[r]]$m1)*length		
+		  res[[r]]$area=area
+	  } else { # We return percentages
+	      res[[r]]$p1=tapply(1/(1+exp(-lm[Index,j])),segmentation[Index],mean)
+          res[[r]]$p2=tapply(1/(1+exp(-lm[Index,k])),segmentation[Index],mean)
+    	  length=res[[r]]$indexEnd-res[[r]]$indexStart+1
+		  area=abs(res[[r]]$p2-res[[r]]$p1)*length
+		  res[[r]]$area=area
+	  }
       res[[r]]=res[[r]][order(-area),]
   }
   if(verbose) cat("\nDone\n")
-  return(list(tabs=res,p=p,chr=chr,pos=pos,pns=pns,
+  return(list(tabs=res,p=p,m=l,chr=chr,pos=pos,pns=pns,
 		      index=index,controlIndex=controlIndex,
               gm=lm,groups=groups,args=args,cutoff=cutoff,
 			  filter=filter,ws=ws,package=package))
