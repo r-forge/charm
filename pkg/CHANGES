@@ -1,3 +1,6 @@
+v0.9.20
+Fixed a bug in plotDensity where the incorrect probes were selected for the control plot.
+
 v0.9.19
 dmrFinder now returns M instead of p when passed log-ratios
 

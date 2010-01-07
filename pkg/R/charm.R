@@ -236,7 +236,7 @@ plotDensity <- function(dat, rx=c(-4,6), controlIndex=NULL,
 		M <- getPmM(dat)
 		lab <- sampleNames(dat)
 	} else 	if (any(class(dat)=="TilingFeatureSet2")) {
-		M <- getM(dat)
+		M <- getM(dat)[pmindex(dat),,drop=FALSE]
 		lab <- sampleNames(dat)
 	} else {
 		M <- dat[,]
