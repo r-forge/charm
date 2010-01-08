@@ -2071,7 +2071,7 @@ dmrFinder <- function(eset=NULL,groups,p=NULL,l=NULL,chr=NULL,pos=NULL,pns=NULL,
   return(list(tabs=res,p=p,m=l,chr=chr,pos=pos,pns=pns,
 		      index=index,controlIndex=controlIndex,
               gm=lm,groups=groups,args=args,cutoff=cutoff,
-			  filter=filter,ws=ws,package=package))
+			  filter=filter,ws=ws,comps=COMPS,package=package))
 }
 
 dmrFdr <- function(dmr, compare=1, numPerms=1000, seed=NULL, verbose=TRUE) {

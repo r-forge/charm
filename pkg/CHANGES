@@ -1,3 +1,6 @@
+v0.9.21
+dmrFinder now returns comps (called COMPS internally)
+
 v0.9.20
 Fixed a bug in plotDensity where the incorrect probes were selected for the control plot.
 
