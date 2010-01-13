@@ -162,11 +162,13 @@ methp <- function(dat, spatial=TRUE, spatialMethod="kernel",
 }
 
 
-readCharm <- function(files, type=rep("unspecified", length(files)), path=".", ut="_532.xys", md="_635.xys", sampleNames=NULL, saveRam=FALSE, ...) {
+
+readCharm <- function(files, path=".", ut="_532.xys", md="_635.xys", 
+		sampleKey, sampleNames=NULL, pkgname,
+		type=NULL, saveRam=FALSE, ...) {
     files <- as.character(files)
     o <- order(files)
     files <- files[o]
-    type <- as.character(type[o])
     if (!is.null(sampleNames)) sampleNames <- as.character(sampleNames[o])
     utIdx <- grep(ut, files)
 	if (length(utIdx)==0) {
@@ -180,8 +182,6 @@ readCharm <- function(files, type=rep("unspecified", length(files)), path=".", u
     filesMd <- files[mdIdx]
     if (!all(sub(ut, "", filesUt) == sub(md, "", filesMd))) 
         stop(cat("The untreated (ut) and methyl-depleted (md) file names don't match up\n"))
-    if (!all(type[utIdx] == type[mdIdx])) 
-        stop(cat("The untreated (ut) and methyl-depleted (md) type labels don't match up\n"))
     if (!is.null(sampleNames)) {
         sampleCheck <- sampleNames[utIdx] == sampleNames[mdIdx]
         if (!all(sampleCheck)) 
@@ -191,10 +191,22 @@ readCharm <- function(files, type=rep("unspecified", length(files)), path=".", u
     } else {
         sampleNames <- sub(ut, "", filesUt)
     }
-    pd <- data.frame(arrayUT=filesUt, arrayMD=filesMd, type=type[utIdx], stringsAsFactors=FALSE)
-    vpd <- data.frame(labelDescription= c("Untreated (UT)", "Methyl-depleted (MD)", "Sample type (e.g. tissue type, cancer/normal, etc.)"),
-                     channel=factor(c("channel1", "channel2", NA), levels=c("channel1", "channel2", "_ALL_")))
-    pdd <- new("AnnotatedDataFrame", data=pd, varMetadata=vpd)
+
+	if (!missing(sampleKey)){
+		sampleKey <- sampleKey[o,]
+		keep <- apply(sampleKey[utIdx,]==sampleKey[mdIdx,], 2, all)
+		extraCols <- sampleKey[utIdx, keep]
+	} else {
+		extraCols <- matrix(nrow=length(utIdx), ncol=0)
+	}
+	if (!is.null(type)) {
+		type <- as.character(type[o])
+		pd <- data.frame(extraCols, type=type[utIdx],
+			 arrayUT=filesUt, arrayMD=filesMd, stringsAsFactors=FALSE)
+	} else {
+		pd <- data.frame(extraCols, arrayUT=filesUt, arrayMD=filesMd, stringsAsFactors=FALSE)
+	}
+    pdd <- new("AnnotatedDataFrame", data=pd)
     sampleNames(pdd) <- sampleNames  
     if (saveRam) {
 		dat <- read.xysfiles2.offline(channel1=file.path(path, filesUt), 
@@ -202,7 +214,7 @@ readCharm <- function(files, type=rep("unspecified", length(files)), path=".", u
         	phenoData=pdd, sampleNames=sampleNames, ...)
 	} else {
     	dat <- read.xysfiles2(channel1=file.path(path, filesUt), 
-			channel2=file.path(path, filesMd),
+			channel2=file.path(path, filesMd), pkgname=pkgname,
         	phenoData=pdd, sampleNames=sampleNames, ...)     
 	}
 	return(dat)
@@ -1660,6 +1672,7 @@ logmethParameters <- function (pm, ngc, n.pts = 2^14)
 
 
 methPercent <- function(m, ngc, commonParams=TRUE, cluster=NULL) {
+	m <- as.matrix(m)
 	param <- t(sapply(1:ncol(m), 
 		function(i) logmethParameters(m[,i], ngc)))
 	alpha <- unlist(param[,"alpha"])

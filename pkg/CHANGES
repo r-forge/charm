@@ -1,3 +1,7 @@
+v0.9.22
+readCharm now takes a samplekey argument which is made available (in reshaped form) in pData(object), and a pkgname argument
+methPercent now accepts single samples 
+
 v0.9.21
 dmrFinder now returns comps (called COMPS internally)
 
