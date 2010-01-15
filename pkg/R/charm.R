@@ -1962,12 +1962,18 @@ dmrFinder <- function(eset=NULL,groups,p=NULL,l=NULL,chr=NULL,pos=NULL,pns=NULL,
 	  class(pdInfo)="TilingFeatureSet" # Trick oligo so that pmChr, pmPosition, probeNames work
 	  chr=pmChr(pdInfo)
 	  pos=pmPosition(pdInfo)
-	  index=which(rowSums(is.na(p))==0)
-      index=index[order(chr[index],pos[index])]
+	  if (!is.null(l)) {
+		index=which(rowSums(is.na(l))==0)	
+        index=index[order(chr[index],pos[index])]
+		l=l[index,]
+	  } else {
+		index=which(rowSums(is.na(p))==0)			
+        index=index[order(chr[index],pos[index])]
+        p=p[index,]
+	  }
       chr=chr[index]
       pos=pos[index]
       pns=probeNames(pdInfo)[index]
-      p=p[index,]
 	  controlIndex <- which(getContainer(pdInfo) %in% controlProbes)
       controlIndex=which(index%in%controlIndex)
       if(!is.null(sdBins)) sdBins<-sdBins[index]
@@ -1989,13 +1995,18 @@ dmrFinder <- function(eset=NULL,groups,p=NULL,l=NULL,chr=NULL,pos=NULL,pns=NULL,
 	  }
       chr=pmChr(eset)
       pos=pmPosition(eset)
-      index=which(rowSums(is.na(p))==0)
-      index=index[order(chr[index],pos[index])]
+	  if (!is.null(l)) {
+		index=which(rowSums(is.na(l))==0)	
+        index=index[order(chr[index],pos[index])]
+		l=l[index,]
+	  } else {
+		index=which(rowSums(is.na(p))==0)			
+        index=index[order(chr[index],pos[index])]
+        p=p[index,]
+	  }
       chr=chr[index]
       pos=pos[index]
       pns=probeNames(eset)[index]
-      p=p[index,]
-
       controlIndex=getControlIndex(eset, controlProbes=controlProbes)
       controlIndex=which(index%in%controlIndex)
       if(!is.null(sdBins)) sdBins<-sdBins[index]

@@ -1,3 +1,6 @@
+v0.9.24
+Fixed a bug in dmrFinder that could cause errors when using M instead of p
+
 v0.9.23
 Fixed bugs in pmQuality and arrayImage that caused errors when run on a single sample
 Restricted exports in NAMESPACE to user-facing functions only.
