@@ -1,3 +1,9 @@
+v0.9.25
+Modified Description field in DESCRIPTION
+Renamed a dmrFinder return element from m to l
+Updated dmrFdr to use l instead of p to allow the use of log-ratios (or logits) with dmrFinder
+Added missing help files to svn
+
 v0.9.24
 Fixed a bug in dmrFinder that could cause errors when using M instead of p
 

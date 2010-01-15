@@ -2092,7 +2092,7 @@ dmrFinder <- function(eset=NULL,groups,p=NULL,l=NULL,chr=NULL,pos=NULL,pns=NULL,
       res[[r]]=res[[r]][order(-area),]
   }
   if(verbose) cat("\nDone\n")
-  return(list(tabs=res,p=p,m=l,chr=chr,pos=pos,pns=pns,
+  return(list(tabs=res,p=p,l=l,chr=chr,pos=pos,pns=pns,
 		      index=index,controlIndex=controlIndex,
               gm=lm,groups=groups,args=args,cutoff=cutoff,
 			  filter=filter,ws=ws,comps=COMPS,package=package))
@@ -2109,11 +2109,11 @@ dmrFdr <- function(dmr, compare=1, numPerms=1000, seed=NULL, verbose=TRUE) {
 	chr=pmChr(pdInfo)
 	pos=pmPosition(pdInfo)
 	o <- order(chr, pos)
-	p <- matrix(NA, nrow=nrow(dmr$p), ncol=ncol(dmr$p))
-	p[o,] <- dmr$p
+	l <- matrix(NA, nrow=nrow(dmr$l), ncol=ncol(dmr$l))
+	l[o,] <- dmr$l
 
 	keep <- dmr$groups %in% unlist(strsplit(compare, "-"))
-	p <- p[,keep]
+	l <- l[,keep]
 	n <- sum(keep)
 	n1 <- sum(dmr$groups==unlist(strsplit(compare, "-"))[1])
 	maxPerms <- choose(n, n1)
@@ -2132,7 +2132,7 @@ dmrFdr <- function(dmr, compare=1, numPerms=1000, seed=NULL, verbose=TRUE) {
 	areas <- lapply(1:numPerms, function(i) {
 		groups <- rep("grp2", n)
 		groups[grp1[i,]] <- "grp1"
-		st <- system.time(dmrPerm <- dmrFinder(dmr$package, p=p, 
+		st <- system.time(dmrPerm <- dmrFinder(dmr$package, l=l, 
 			groups=groups, cutoff=dmr$cutoff, 
 			filter=dmr$filter, ws=dmr$ws, verbose=FALSE))[3]
 		if (verbose & (i %in% round(seq(1, numPerms, length.out=10)))) {

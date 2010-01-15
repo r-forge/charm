@@ -1,0 +1,155 @@
+%\VignetteIndexEntry{charm Vignette}
+%\VignetteDepends{Biobase, oligo, charm, pd.feinberg.hg18.me.hx1}
+%\VignetteKeywords{}
+%\VignettePackage{charm}
+\documentclass{article}
+
+\newcommand{\Rfunction}[1]{{\texttt{#1}}}
+\newcommand{\Rmethod}[1]{{\texttt{#1}}}
+\newcommand{\Rcode}[1]{{\texttt{#1}}}
+\newcommand{\Robject}[1]{{\texttt{#1}}}
+\newcommand{\Rpackage}[1]{{\textsf{#1}}}
+\newcommand{\Rclass}[1]{{\textit{#1}}}
+
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{pdfpages}
+
+\begin{document}
+\title{Estimating DNA methylation levels and finding differentially methylated regions using the charm package}
+\date{January, 2010}
+\author{Martin Aryee\footnote{aryee@jhu}, Rafael Irizarry}
+\maketitle
+\begin{center}
+Johns Hopkins School of Medicine / Johns Hopkins School of Public Health\\Baltimore, MD, USA
+\end{center}
+
+<<setup, echo=FALSE, results=hide>>=
+options(width=60)
+options(continue=" ")
+options(prompt="R> ")
+@ 
+
+\section{Introduction}
+
+The Bioconductor package \Rpackage{charm} can be used to analyze data from the Nimblegen McrBC/CHARM DNA methylation microarray platform \cite{IrizarryGenomeRes2008}. 
+
+Functions include:
+\begin{itemize}
+\item Quality control
+\item Percentage methylation estimates
+\item Identification of differentially methylated regions
+\end{itemize}
+
+As input we will need raw Nimblegen data (.xys) files.
+
+This vignette uses the following packages:
+\begin{itemize}
+\item \Rpackage{charm}: contains the analysis functions
+\item \Rpackage{charmData}: an example dataset
+\item \Rpackage{pd.feinberg.hg18.me.hx1}: the annotation package for the human CHARM microarray
+\end{itemize}
+
+Each sample is represented by two xys files corresponding to the untreated (green) and methyl-depleted (red) channels. The 532.xys and 635.xys suffixes indicate the green and red channels respectively.
+
+\section{Install annotation and example data}
+
+Install the CHARM array annotation package and example data (if not already installed.)
+
+<<install, results=hide>>=
+if (!require(charmData)) { 		
+	install.packages("charmData",repos="http://R-Forge.R-project.org")
+}
+if (!require(pd.feinberg.hg18.me.hx1)) { 		
+	install.packages("pd.feinberg.hg18.me.hx1",repos="http://R-Forge.R-project.org")
+}
+@
+
+
+\section{Read in raw data}
+Get the name of your data directory (in this case, the example data):
+<<dataDir>>=
+dataDir <- system.file("data", package="charmData")
+dataDir
+@
+
+First we read in the sample description file:
+<<phenodata>>=
+pd <- read.delim(file.path(dataDir, "sample_description_file.txt"))
+pd
+
+@
+
+Now we load the \Rpackage{charm} package and read in the data. The \Rcode{readCharm} command makes the assumption (unless told otherwise) that the two xys files for a sample have the same file name up to the suffixes 532.xys (untreated) and 635.xys (methyl-depleted).
+
+<<readData>>=
+library(charm)
+rawData <- readCharm(files=pd$Filename, path=dataDir, sampleKey=pd)
+rawData
+@ 
+
+\section{Array quality assessment}
+We can calculate array quality scores and generate a pdf report with the qcReport command.
+
+A useful quick way of assessing data quality is to examine the untreated channel where we expect every probe to have signal. Very low signal intensities on all or part of an array can indicate problems with hybridization or scanning. The CHARM array includes background probes that do not match any genomic sequence. Any signal at these probes can be assumed to be the result of optical noise or cross-hybridization. The array quality score is the average percentile rank of the signal robes among these background probes. A score of 100 means all signal probes rank above all background probes (the ideal scenario).
+
+<<qc>>=
+qual <- qcReport(rawData, file="qcReport.pdf")
+qual
+@
+
+The PDF quality report is shown in Appendix A.
+
+\section{Percentage methylation estimates and Differentially methylated regions (DMRs)}
+
+Having determined that no arrays need to be thrown out due to hybridization quality issues we can go ahead and calculate probe-level percentage methylation estimates for each sample. The 'plotDensity' option of methp produces useful PDF diagnostic plots to help identify non-hybridization quality issues. The report is shown in Appendix B.
+
+<<methp>>=
+p <- methp(rawData, plotDensity="density.pdf") 
+head(p)
+@
+
+We can also identify differentially methylated regions using dmrFinder:
+
+
+<<dmrFinder>>=
+grp <- pData(rawData)$Tissue_Type
+grp
+dmr <- dmrFinder(rawData, p=p, groups=grp)
+names(dmr)
+names(dmr$tabs)
+head(dmr$tabs[[1]])
+@
+
+
+
+--- UNDER CONSTRUCTION ----
+One of the samples has consistent signal strength across its array while the second has clear spatial artifacts. The \Rcode{methp} function we ran earlier includes a step that can correct such artifacts if they are not too severe. We can check to see how successful the correction was by running this step manually:
+
+<<spatialAdjust>>=
+#dat <- spatialAdjust(rawData) 
+#pmqual <- pmvsbg(dat)
+@
+
+
+\bibliography{charmVignette}{}
+\bibliographystyle{plain}
+
+\section{Appendix A: Quality report}
+\includepdf[pages=-]{qcReport.pdf}
+
+\section{Appendix B: Density plots}
+Each row shows one stage of preprocessing. The left plot shows all probes while the right plot shows control probes.
+\includepdf{density.pdf}
+
+ 
+\section{Details}
+
+This document was written using:
+
+<<>>=
+sessionInfo()
+@ 
+
+
+\end{document}
