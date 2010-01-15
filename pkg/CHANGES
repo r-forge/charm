@@ -1,3 +1,8 @@
+v0.9.23
+Fixed bugs in pmQuality and arrayImage that caused errors when run on a single sample
+Restricted exports in NAMESPACE to user-facing functions only.
+Started adding documentation.
+
 v0.9.22
 readCharm now takes a samplekey argument which is made available (in reshaped form) in pData(object), and a pkgname argument
 methPercent now accepts single samples 

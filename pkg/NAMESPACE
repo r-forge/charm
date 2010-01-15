@@ -12,4 +12,7 @@ importFrom(spatial, surf.ls, predict.trls)
 importFrom(siggenes, pi0.est, qvalue.cal)
 importFrom(gtools, combinations)
 importFrom(affxparser, readCel, readCelHeader)
-exportPattern("^[[:alpha:]]+")
+
+export(bgAdjustBgp, countGC, cpgdensity, dmrFdr, dmrFinder, getControlIndex, methPercent, methp, 
+normalizeBetweenSamples, normalizeWithinSamples, plotDensity, pmQuality, qcReport, readCharm, 
+spatialAdjust)

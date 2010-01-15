@@ -1068,7 +1068,7 @@ qcReport <- function(dat, file=NULL, utRange=c(30,100), enRange=c(8,12), numProb
 }
 
 arrayImage <- function(x,y,z, view="2d", blockSize=50, cluster=NULL) {
-    if (ncol(z)==1) z <- as.matrix(z)
+    if (is.null(dim(z))) z <- as.matrix(z)
     if (view=="col") {
 		if(any(class(z)=="ff")) stop("arrayImage doesn't yet support view='col' for OfflineTilingFeatureSet2\n")
 		tmp <- vec2array(x,y,z)
@@ -1156,7 +1156,7 @@ pmQuality <- function(dat, channel="channel1", verbose=FALSE, idx=NULL, cluster=
 	    }, pms, bgs, Ngc, bgNgc)
 	   	if (all(class(cluster)!="cluster")) stopCluster(cl) 
 	} else {
-		pms <- pm(dat)[idx,,]
+		pms <- pm(dat)[idx,,,drop=FALSE]
 		bgs <- bg(dat)
 		pmq <- sapply(1:ncol(pms), function(i) {
 		    if (verbose) cat(".")
