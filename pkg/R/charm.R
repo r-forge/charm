@@ -8,7 +8,8 @@ methp <- function(dat, spatial=TRUE, spatialMethod="kernel",
 		spatial1d=NULL, spatial2d=NULL, 
 		bgSubtract=TRUE,
 		withinSampleNorm="loess", binSize=500, numSegments=3, useTot=TRUE,
-		betweenSampleNorm="quantile", msqn=FALSE,
+		betweenSampleNorm="quantile", 
+		scale=c(0.99, 0.99),
         minQCScore=NULL, 
 		controlProbes=c("CONTROL_PROBES", "CONTROL_REGIONS"),
 		controlIndex=NULL, 
@@ -103,6 +104,10 @@ methp <- function(dat, spatial=TRUE, spatialMethod="kernel",
 	dat <- normalizeWithinSamples(dat, method=withinSampleNorm, useTot=useTot,
 		binSize=binSize, numSegments=numSegments, cluster=cl,
 		controlIndex=controlIndex, verbose=verbose)
+	
+	# Scale	
+	dat <- scaleSamples(dat, scale)
+
     # Between sample normalization    
     #if (verbose) cat("Between sample normalization. 
 	if(!is.null(plotDensity)) {
@@ -117,6 +122,7 @@ methp <- function(dat, spatial=TRUE, spatialMethod="kernel",
 			cat (": ", betweenSampleNorm, "\n", sep="")
 		}
 	}
+	
     dat <- normalizeBetweenSamples(dat, m=bs$m, 
 		untreated=bs$untreated, 
         enriched=bs$enriched, controlProbes=controlProbes, 
@@ -126,12 +132,7 @@ methp <- function(dat, spatial=TRUE, spatialMethod="kernel",
 	} else {
 		M <- getM(dat)[pmindex(dat),]
 	}
-		
-	if (msqn) {
-		cat("The msqn option is not implemented\n")
-		#cat("Between sample normalization: msqn\n")
-		#M <- parSQN(y=M[,], ctrl.id=controlIndex, cluster=cl)
-	}	
+
 		
 	if(!is.null(plotDensity)) {
 		plotDensity(dat, main="4. After between-sample norm", cols=cols, lwd=lwd)
@@ -161,6 +162,22 @@ methp <- function(dat, spatial=TRUE, spatialMethod="kernel",
     return(retval)
 }
 
+
+scaleSamples <- function(dat, scale) {
+	if (length(scale)==2) {
+		pms <- pm(dat)
+		c1 <- log2(pms[,,1])
+		c2 <- log2(pms[,,2])
+		M <- c1-c2		
+		x <- apply(M, 2, quantile, scale[1])
+		adj <- x / -log(1-scale[2])
+		M <- sweep(M, 2, adj, FUN="/")
+		c2 <- c1-M
+		pms[,,2] <- 2^c2
+		pm(dat) <- pms
+	}
+	return(dat)
+}		
 
 
 readCharm <- function(files, path=".", ut="_532.xys", md="_635.xys", 
@@ -219,6 +236,8 @@ readCharm <- function(files, path=".", ut="_532.xys", md="_635.xys",
 	}
 	return(dat)
 }
+
+
 
 charmCluster <- function(cluster=NULL, type="SOCK", verbose=FALSE) {
 	if(any(class(cluster)=="cluster")) { 

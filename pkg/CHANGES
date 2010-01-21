@@ -1,3 +1,9 @@
+v0.9.26
+Added Sweave.sty to inst/doc
+Removed the methp msqn option
+Added the methp scale option. Defaults to c(0.99, 0.99)
+Added scaleSamples
+
 v0.9.25
 Modified Description field in DESCRIPTION
 Renamed a dmrFinder return element from m to l
