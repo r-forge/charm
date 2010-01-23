@@ -1,3 +1,6 @@
+v0.9.28
+Fixed a bug in dmrFdr where permutation areas were calculated using logit(p) instead of p
+
 v0.9.27
 Added charmData to suggests
 Modified VignetteDepends line in vignette
