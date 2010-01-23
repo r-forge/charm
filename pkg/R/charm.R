@@ -1683,7 +1683,8 @@ logmethParameters <- function (pm, ngc, n.pts = 2^14)
     sig.data <- sig.data - pmbg
     #cat("Debug logmethParameters(): sig.data =", 
     #    100*round(length(sig.data)/length(pm), 2), "%\n")
-    expmean <- max.density(sig.data, n.pts)
+    #expmean <- max.density(sig.data, n.pts)
+	expmean <- mean(sig.data)
     alpha <- 1/expmean
     mubg <- pmbg
     list(alpha = alpha, mu = mubg, sigma = bgsd)

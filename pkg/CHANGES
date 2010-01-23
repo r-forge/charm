@@ -1,3 +1,8 @@
+v0.9.27
+Added charmData to suggests
+Modified VignetteDepends line in vignette
+Switched from max.density to mean for the exp alpha parameter estimation in logmethParameters
+
 v0.9.26
 Added Sweave.sty to inst/doc
 Removed the methp msqn option
