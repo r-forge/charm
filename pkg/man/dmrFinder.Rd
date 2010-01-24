@@ -5,7 +5,7 @@
 Find differentially methylated regions (DMRs)
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Find differentially methylated regions (DMRs) from tiling microarray data.
 }
 \usage{
 dmrFinder(eset = NULL, groups, p = NULL, l = NULL, chr = NULL, pos = NULL, pns = NULL, sdBins = NULL, controlIndex = NULL, Indexes = NULL, filter = NULL, package = NULL, ws = 7, verbose = TRUE, compare = "all", bgSubtract = TRUE, withinSampleNorm = "loess", binSize = 500, numSegments = 3, betweenSampleNorm = "quantile", minQCScore = NULL, controlProbes = c("CONTROL_PROBES", "CONTROL_REGIONS"), cluster = NULL, cutoff = 0.995, ...)
@@ -102,8 +102,9 @@ dmrFinder(eset = NULL, groups, p = NULL, l = NULL, chr = NULL, pos = NULL, pns =
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Martin Aryee <aryee@jhu.edu>
 }
+
 \note{
 %%  ~~further notes~~
 }

@@ -8,7 +8,7 @@ Estimate DNA methylation
 Estimate DNA methylation from McrBC/CHARM microarray data in terms of log-ratios or percentages.
 }
 \usage{
-methp(dat, spatial = TRUE, spatialMethod = "kernel", spatial1d = NULL, spatial2d = NULL, bgSubtract = TRUE, withinSampleNorm = "loess", binSize = 500, numSegments = 3, useTot = TRUE, betweenSampleNorm = "quantile", msqn = FALSE, minQCScore = NULL, controlProbes = c("CONTROL_PROBES", "CONTROL_REGIONS"), controlIndex = NULL, ctrlNoCpGWindow = NULL, subject = NULL, commonMethPercentParams = NULL, verbose = TRUE, cluster = NULL, returnM = FALSE, plotDensity = NULL, plotDensityCols = NULL, duplicate = TRUE)
+methp(dat, spatial = TRUE, spatialMethod = "kernel", spatial1d = NULL, spatial2d = NULL, bgSubtract = TRUE, withinSampleNorm = "loess", binSize = 500, numSegments = 3, useTot = TRUE, betweenSampleNorm = "quantile", scale = c(0.99, 0.99), minQCScore = NULL, controlProbes = c("CONTROL_PROBES", "CONTROL_REGIONS"), controlIndex = NULL, ctrlNoCpGWindow = NULL, subject = NULL, commonMethPercentParams = NULL, verbose = TRUE, cluster = NULL, returnM = FALSE, plotDensity = NULL, plotDensityCols = NULL, duplicate = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -45,8 +45,8 @@ within-sample normalization method. Choices are "loess" and "none"
   \item{betweenSampleNorm}{
 %%     ~~Describe \code{betweenSampleNorm} here~~
 }
-  \item{msqn}{
-%%     ~~Describe \code{msqn} here~~
+  \item{scale}{
+%%     ~~Describe \code{scale} here~~
 }
   \item{minQCScore}{
 %%     ~~Describe \code{minQCScore} here~~
@@ -96,8 +96,9 @@ A matrix of probe-level percentage methylation estimates, one column per sample.
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Martin Aryee <aryee@jhu.edu>
 }
+
 \note{
 %%  ~~further notes~~
 }
@@ -116,7 +117,7 @@ A matrix of probe-level percentage methylation estimates, one column per sample.
 function (dat, spatial = TRUE, spatialMethod = "kernel", spatial1d = NULL, 
     spatial2d = NULL, bgSubtract = TRUE, withinSampleNorm = "loess", 
     binSize = 500, numSegments = 3, useTot = TRUE, betweenSampleNorm = "quantile", 
-    msqn = FALSE, minQCScore = NULL, controlProbes = c("CONTROL_PROBES", 
+    scale = c(0.99, 0.99), minQCScore = NULL, controlProbes = c("CONTROL_PROBES", 
         "CONTROL_REGIONS"), controlIndex = NULL, ctrlNoCpGWindow = NULL, 
     subject = NULL, commonMethPercentParams = NULL, verbose = TRUE, 
     cluster = NULL, returnM = FALSE, plotDensity = NULL, plotDensityCols = NULL, 

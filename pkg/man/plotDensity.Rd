@@ -2,10 +2,10 @@
 \alias{plotDensity}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-Log-ratio density plot for signal and control probes
+Log-ratio density plot for all probes and control probes
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Make density plots of log-ratios for two-color microarray data. Two plots are produced: one for all probes on the array, and a second for the control probes.
 }
 \usage{
 plotDensity(dat, rx = c(-4, 6), controlIndex = NULL, pdfFile = NULL, main = NULL, cols = NULL, lwd = NULL)
@@ -48,8 +48,9 @@ plotDensity(dat, rx = c(-4, 6), controlIndex = NULL, pdfFile = NULL, main = NULL
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Martin Aryee <aryee@jhu.edu>
 }
+
 \note{
 %%  ~~further notes~~
 }

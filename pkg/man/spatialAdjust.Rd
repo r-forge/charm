@@ -1,11 +1,10 @@
 \name{spatialAdjust}
 \alias{spatialAdjust}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Correct spatial artifacts
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Remove spatial artifacts from microarray data stored in TilingFeatureSet objects
 }
 \usage{
 spatialAdjust(dat, cluster = NULL, blockSize = 50, theta = 1)
@@ -13,16 +12,16 @@ spatialAdjust(dat, cluster = NULL, blockSize = 50, theta = 1)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{
-%%     ~~Describe \code{dat} here~~
+TilingFeatureSet
 }
   \item{cluster}{
 %%     ~~Describe \code{cluster} here~~
 }
   \item{blockSize}{
-%%     ~~Describe \code{blockSize} here~~
+The dimension of blocks to use when averaging pixel values
 }
   \item{theta}{
-%%     ~~Describe \code{theta} here~~
+smoothing parameter
 }
 }
 \details{
@@ -39,8 +38,9 @@ spatialAdjust(dat, cluster = NULL, blockSize = 50, theta = 1)
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Martin Aryee <aryee@jhu.edu>
 }
+
 \note{
 %%  ~~further notes~~
 }

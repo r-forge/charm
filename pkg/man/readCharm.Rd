@@ -1,10 +1,10 @@
 \name{readCharm}
 \alias{readCharm}
 \title{
-Read in CHARM DNA methylation microarray data
+Read in McrBC/CHARM DNA methylation microarray data
 }
 \description{
-Read in DNA methylation microarray data from the CHARM platform
+Read in DNA methylation microarray data from the McrBC/CHARM platform
 }
 \usage{
 readCharm(files, path = ".", ut = "_532.xys", md = "_635.xys", sampleKey, sampleNames = NULL, pkgname, type = NULL, ...)
@@ -30,6 +30,9 @@ a vector of names to use for the samples. One line per xys file.
 }
   \item{pkgname}{
 the annotation package name
+}
+  \item{type}{
+deprecated option 
 }
   \item{\dots}{
 additional options passed on to read.xysfiles2

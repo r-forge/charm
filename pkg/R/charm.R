@@ -91,7 +91,7 @@ methp <- function(dat, spatial=TRUE, spatialMethod="kernel",
     # Background removal
 	if (bgSubtract) {
     	if (verbose) cat("Background removal\n")
-		dat <- bgAdjustBgp(dat, cluster=cl)
+		dat <- bgAdjustBgp(dat)
 	}
 	if(!is.null(plotDensity)) {
 		plotDensity(dat, main="2. After spatial & bg", cols=cols, lwd=lwd)
@@ -158,7 +158,6 @@ methp <- function(dat, spatial=TRUE, spatialMethod="kernel",
 		if(returnM=="FALSE") plotDensity(retval, main="5. Percentage methylation", controlIndex=getControlIndex(dat), rx=c(0,1), cols=cols, lwd=lwd)
 		dev.off()		
 	}
-   	if (all(class(cluster)!="cluster")) stopCluster(cl) 
     return(retval)
 }
 
@@ -182,7 +181,7 @@ scaleSamples <- function(dat, scale) {
 
 readCharm <- function(files, path=".", ut="_532.xys", md="_635.xys", 
 		sampleKey, sampleNames=NULL, pkgname,
-		type=NULL, saveRam=FALSE, ...) {
+		type=NULL, ...) {
     files <- as.character(files)
     o <- order(files)
     files <- files[o]
@@ -225,15 +224,9 @@ readCharm <- function(files, path=".", ut="_532.xys", md="_635.xys",
 	}
     pdd <- new("AnnotatedDataFrame", data=pd)
     sampleNames(pdd) <- sampleNames  
-    if (saveRam) {
-		dat <- read.xysfiles2.offline(channel1=file.path(path, filesUt), 
-			channel2=file.path(path, filesMd),
-        	phenoData=pdd, sampleNames=sampleNames, ...)
-	} else {
-    	dat <- read.xysfiles2(channel1=file.path(path, filesUt), 
+   	dat <- read.xysfiles2(channel1=file.path(path, filesUt), 
 			channel2=file.path(path, filesMd), pkgname=pkgname,
         	phenoData=pdd, sampleNames=sampleNames, ...)     
-	}
 	return(dat)
 }
 
@@ -311,7 +304,6 @@ normalizeLoess <- function(dat, controlIndex=NULL,
 			pms[, i, "channel2"] <- ret
 			return(NULL)
 		}, pms, M, by, controlIndex)
-		if (all(class(cluster)!="cluster")) stopCluster(cl) 
 	} else {
 		for (i in 1:dim(dat)["Samples"]) {
 			c1 <- log2(pms[,i,"channel1"])
@@ -522,7 +514,6 @@ SQN.ff <- function (y, channel=2, N.mix = 5, ctrl.id, model.weight = 0.9, cluste
 	        max.q = 0.95, low = quantile(QN1, 0.05))
 		y[,i,channel] <- 2^tmp
 	}, y, channel, ctrl.id, QN1, mix.param)
-	if (all(class(cluster)!="cluster")) stopCluster(cl) 
 	return(y)
 }
 
@@ -538,7 +529,6 @@ parSQN <- function (y, N.mix = 5, ctrl.id, model.weight = 0.9, cluster=NULL) {
     QN1 = QN * (1 - model.weight) + qq * model.weight
     ynorm = parApply(cl, y, 2, mix.qn, ctrl.id, NQ = QN1, mix.param = mix.param, 
         max.q = 0.95, low = quantile(QN1, 0.05))
-	if (all(class(cluster)!="cluster")) stopCluster(cl) 
 	return(ynorm)
 }
 
@@ -1110,7 +1100,6 @@ arrayImage <- function(x,y,z, view="2d", blockSize=50, cluster=NULL) {
 				Z <- z[,i]
 				as.image(Z, ind=d$index, nx=d$m, ny=d$n, na.rm=TRUE)		
 	        }, d)   			
-			if (all(class(cluster)!="cluster")) stopCluster(cl)     
 		} else {
 			ret <- apply(z, 2, function(vec) {
 				as.image(vec, ind=d$index, nx=d$m, ny=d$n, na.rm=TRUE)		
@@ -1173,7 +1162,6 @@ pmQuality <- function(dat, channel="channel1", verbose=FALSE, idx=NULL, cluster=
 			pmq[,i] <- ret
 			return(NULL)
 	    }, pms, bgs, Ngc, bgNgc)
-	   	if (all(class(cluster)!="cluster")) stopCluster(cl) 
 	} else {
 		pms <- pm(dat)[idx,,,drop=FALSE]
 		bgs <- bg(dat)
@@ -1257,176 +1245,7 @@ countSeq <- function(subject, chr, start, end, seq) {
     return(retval)
 }
 
-findClosestGene <- function (chrom, pos, genome = "hg17", position = "txStart") {
-    ## This function modified from the version in the ACME package to allow for chromosomes
-    ## not present in the annotation file
-    if (!exists("refflat")) {
-        refflat <<- list()
-        refflat[[genome]] <<- getRefflat(genome)
-    }
-    else if (!match(genome, names(refflat))) {
-        refflat[[genome]] <<- getRefflat(genome)
-    }
-    rf <- refflat[[genome]]
-    chromsub <- rf$chrom == chrom
-    if (sum(chromsub)>0) {
-        diffdist <- rf[chromsub, position] - pos
-        sub <- which(abs(diffdist) == min(abs(diffdist)))
-        rf <- rf[chromsub, 1:9][sub, ]
-        return(data.frame(rf, Distance = diffdist[sub]))
-    } else {
-        return(data.frame(geneName="", name="", chrom=0, txStart=0, strand=""))
-    }
-    
-}
 
-findClosestGeneTxt <- function (chrom, pos, genome = "txtFile", position = "txStart") {
-    if (chrom != "GROUPUN") {
-        if (!exists("ann")) {
-            ann <- read.delim(genome)
-        }
-        rf <- ann
-        chromsub <- rf$chrom == chrom
-        if (sum(chromsub)>0) {
-            diffdist <- rf[chromsub, position] - pos
-            sub <- which(abs(diffdist) == min(abs(diffdist)))
-            rf <- rf[chromsub,][sub, ]
-            return(data.frame(rf, Distance = diffdist[sub]))
-        } else {
-            return(data.frame(geneName="", name="", chrom=0, txStart=0, strand=""))
-        }
-    } else {
-        return(data.frame(geneName="", name="", chrom=0, txStart=0, strand=""))
-    }
-}
-
-
-closestTSS <- function(chr, start, end, genome="hg18", annotationTextFile=FALSE) {
-    m <- rowMeans(cbind(start,end))
-    t(sapply(1:length(chr), function(i) {
-        if (!annotationTextFile) {
-            gene <- findClosestGene(chrom=chr[i], pos=m[i], genome = genome, position = "txStart")[1,]
-        } else {
-            gene <- findClosestGeneTxt(chrom=chr[i], pos=m[i], genome = genome, position = "txStart")[1,]
-        }
-        if (gene$txStart>=start[i] & gene$txStart<=end[i]) {
-            distance <- 0
-            relationToTSS <- "overlaps"
-        } else if (gene$chrom==0) {
-            distance=0
-            signedDist=0
-            relationToTSS=""
-        } else {
-            distance <- min(abs(start[i]-gene$txStart), abs(end[i]-gene$txStart))
-            signedDist <- (m[i]-gene$txStart) * ifelse(gene$strand=="+", 1, -1)
-            relationToTSS <- ifelse (signedDist<=0, "upstream", "downstream")
-        }
-        c(symbol=as.character(gene$geneName), refSeq=as.character(gene$name), 
-            distanceToTSS=distance, relationToTSS=relationToTSS, TSS=gene$txStart)
-    }))
-}
-
-annotateDMRs <-function(tab, organism="hg18", minCpG=2, minProbes=3, minPDiff=0, minArea=0, maxRows=-1, sortCol=NULL) {
-	if (!is.null(sortCol)) {
-		o <- order(tab[,sortCol], decreasing=TRUE)
-		tab <- tab[o,]
-	}
-	idx <- which((tab$start-tab$end)>0)
-	if (length(idx)>0) {
-		cat("Removing row(s)", idx, "because start is after end\n")
-		tab <- tab[-idx,]
-	}
-    annotationTextFile <- FALSE
-    if (organism=="hg18") {
-        if (!require(BSgenome) & !require(BSgenome.Hsapiens.UCSC.hg18))
-            stop("Please install the 'BSgenome' and 'BSgenome.Hsapiens.UCSC.hg18' packages")
-        if (!require(org.Hs.eg.db))
-            stop("Please install the 'org.Hs.eg.db' package")
-        subject <- Hsapiens
-        genome="hg18"
-        entrez2NameMap <- org.Hs.egGENENAME 
-        refseq2EntrezMap <- org.Hs.egREFSEQ2EG
-    } else if (organism=="hg19") {
-	        if (!require(BSgenome) & !require(BSgenome.Hsapiens.UCSC.hg19))
-	            stop("Please install the 'BSgenome' and 'BSgenome.Hsapiens.UCSC.hg19' packages")
-	        if (!require(org.Hs.eg.db))
-	            stop("Please install the 'org.Hs.eg.db' package")
-	        subject <- Hsapiens
-	        genome="hg19"
-	        entrez2NameMap <- org.Hs.egGENENAME 
-	        refseq2EntrezMap <- org.Hs.egREFSEQ2EG
-	 } else if (organism=="mouse") {
-        if (!require(BSgenome) & !require(BSgenome.Mmusculus.UCSC.mm8))
-            stop("Please install the 'BSgenome' and 'BSgenome.Mmusculus.UCSC.mm8' packages")
-        if (!require(org.Mm.eg.db))
-            stop("Please install the 'org.Mm.eg.db' package")
-        subject <- Mmusculus
-        genome="mm8"
-        entrez2NameMap <- org.Mm.egGENENAME 
-        refseq2EntrezMap <- org.Mm.egREFSEQ2EG
-    } else if (organism=="bee") {
-        genome <- "/home/bst/other/maryee/projects/methylation/data/feinberg/ApiMel4Genes.txt"
-        subject <- NA
-        entrez2NameMap <- NA
-        refseq2EntrezMap <- NA
-        annotationTextFile <- TRUE
-    } else {
-        subject <- organism$subject
-        genome <- organism$genome
-        entrez2NameMap <- organism$entrez2NameMap
-        refseq2EntrezMap <- organism$refseq2EntrezMap
-    }
-	tab$chr <- as.character(tab$chr)
-    tab$nprobes <- tab$indexEnd-tab$indexStart+1
-    tab$length <- tab$end-tab$start+1
-	
-    if("p1" %in% colnames(tab)) tab$absDiff <- abs(tab$p2-tab$p1)
-    if("M1" %in% colnames(tab)) tab$absDiff <- abs(tab$M2-tab$M1)
-    if (class(subject)=="BSgenome") {
-        tab$numcpg <- countSeq(subject, chr=tab$chr, start=tab$start, end=tab$end, seq="CG")
-		if (minPDiff>0) {
-        	tab <- subset(tab, numcpg>=minCpG & nprobes>=minProbes & absDiff>=minPDiff & area>=minArea) ## CHECK THE minArea !!!
-		} else {
-			tab <- subset(tab, numcpg>=minCpG & nprobes>=minProbes & area>=minArea) 
-		}
-    }
-	if(nrow(tab)==0) return(tab)
-    if (maxRows>0) {
-        n <- min(maxRows, nrow(tab))
-        tab <- tab[1:n,]
-    }
-    tab <- cbind(tab, closestTSS(tab$chr, tab$start, tab$end, genome=genome, annotationTextFile=annotationTextFile))
-    tab$refSeq <- as.character(tab$refSeq)
-    tab$TSS <- as.numeric(as.character(tab$TSS))
-    tab$distanceToTSS <- as.numeric(as.character(tab$distanceToTSS))
-    if (class(subject)=="BSgenome") {
-        # Add Entrez IDs
-        mapped <- mappedkeys(refseq2EntrezMap) 
-        #xx <- as.list(refseq2EntrezMap[mapped]) 
-        xx <- suppressWarnings(as.character(refseq2EntrezMap[mapped]))
-        entrez <- xx[as.character(tab$refSeq)] #unlist is needed after as.character
-        tab$entrez <- entrez
-        #tab$entrez <- NA # these 3 lines only needed after as.list(refseq2EntrezMap[mapped]) 
-        #idx <- match(tab$refSeq, names(entrez))
-        #tab$entrez <- entrez[idx]
-        # Add gene names
-        mapped_genes <- mappedkeys(entrez2NameMap) 
-        #xx <- as.list(entrez2NameMap[mapped_genes]) 
-        xx <- as.character(entrez2NameMap[mapped_genes]) 
-        geneName <- xx[as.character(tab$entrez)]  #unlist is needed after as.list
-        tab$geneName <- geneName
-        #tab$geneName <- NA # these 3 lines only needed after as.list(entrez2NameMap[mapped_genes])  
-        #idx <- match(tab$entrez, names(geneName))
-        #tab$geneName <- geneName[idx]
-        # Convert to character
-    } else {
-        tab$entrez <- NA
-        tab$geneName <- NA
-    }
-	tab$symbol <- as.character(tab$symbol)
-    tab$relationToTSS <- as.character(tab$relationToTSS)
-    return(tab)
-}
 
 spatialAdjustVec <- function(z, d, ims=NULL, theta=1) {
 	if (is.null(ims)) {
@@ -1474,7 +1293,6 @@ spatialAdjust <- function(dat, cluster=NULL, blockSize=50, theta=1) {
 			bgs[,i, "channel2"] <- 2^smBg$zAdj
 			return(NULL) ## the ff object is already updated on disk	
 	    }, pms, bgs, x, y, bgX, bgY, nx, ny, d, dBg)
-		if (all(class(cluster)!="cluster")) stopCluster(cl)
 	} else {
 		for (i in 1:ncol(pms)) {
 			for (channel in 1:2) {
@@ -1545,7 +1363,6 @@ spatialAdjust.poly <- function(dat, demedian=FALSE, cluster=NULL) {
 		}
 		
     }, pms, bgs, X, Y, bgX, bgY)
-	if (all(class(cluster)!="cluster")) stopCluster(cl)
 	if (all(class(pms)!="ff")) {
 		for (i in 1:length(tmp)) {
 			pms[,i,] <- tmp[[i]][["pm"]]
@@ -1626,7 +1443,7 @@ bgParametersBgp <- function (pm, bgpm, Ngc, bgNgc, n.pts = 2^14)
 
 
 # Adjust background using the RMA model with background probes
-bgAdjustBgp <- function (dat, cluster=NULL) {
+bgAdjustBgp <- function (dat) {
 	pms <- pm(dat)
 	bgs <- bg(dat)
     Ngc <- countGC(dat, "pm")
@@ -1644,7 +1461,6 @@ bgAdjustBgp <- function (dat, cluster=NULL) {
 			}
 			return(NULL) ## the ff object is already updated on disk	
 	    }, pms, bgs, Ngc, bgNgc)
-		if (all(class(cluster)!="cluster")) stopCluster(cl) 
 	} else {
 		for (samp in 1:ncol(pms)) {
 	    	for (chan in 1:2) {
@@ -1724,7 +1540,6 @@ methPercent <- function(m, ngc, commonParams=TRUE, cluster=NULL) {
 	    }, m, ngc, alpha, sigma, tmp)
 		ret <- tmp
 		colnames(ret) <- colnames(m)
-	   	if (all(class(cluster)!="cluster")) stopCluster(cl) 
 	} else {
 		ret <- sapply(1:ncol(m), function(i) {
 			x <- m[,i]
@@ -1863,7 +1678,7 @@ comp = function(g){
 }
  
 get.tog <- function(l,groups,compare,verbose){
-  require(genefilter)
+  #require(genefilter)
   
   gIndex=split(seq(along=groups),groups)
   gIndex=gIndex[which(names(gIndex)%in%compare)]
@@ -2195,7 +2010,6 @@ prettyTime <- function(seconds) {
 }
 
 .onAttach <- function(libname, pkgname) {
- require(snow)
  message("Welcome to charm version ", packageDescription("charm", field="Version"))
 }
 

@@ -5,7 +5,7 @@
 Estimate percentage DNA methylation from log-ratios
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Estimate percentage DNA methylation from log-ratios
 }
 \usage{
 methPercent(m, ngc, commonParams = TRUE, cluster = NULL)
@@ -39,8 +39,9 @@ methPercent(m, ngc, commonParams = TRUE, cluster = NULL)
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Martin Aryee <aryee@jhu.edu>
 }
+
 \note{
 %%  ~~further notes~~
 }

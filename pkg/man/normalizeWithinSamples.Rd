@@ -5,7 +5,7 @@
 Within-sample (between-channel) normalization for two-color data
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Within-sample (between-channel) normalization for two-color DNA methylation microarray data.
 }
 \usage{
 normalizeWithinSamples(dat, method = "loess", controlProbes = "CONTROL_REGIONS", controlIndex = NULL, numSegments = 3, bins = NULL, binSize = 500, approx = TRUE, breaks = 1000, useTot = TRUE, cluster = NULL, verbose = FALSE)
@@ -63,8 +63,9 @@ normalizeWithinSamples(dat, method = "loess", controlProbes = "CONTROL_REGIONS",
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Martin Aryee <aryee@jhu.edu>
 }
+
 \note{
 %%  ~~further notes~~
 }

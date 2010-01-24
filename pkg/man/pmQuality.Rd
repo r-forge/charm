@@ -5,7 +5,7 @@
 Probe quality metrics
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Calculate probe quality scores 
 }
 \usage{
 pmQuality(dat, channel = "channel1", verbose = FALSE, idx = NULL, cluster = NULL)
@@ -42,8 +42,9 @@ pmQuality(dat, channel = "channel1", verbose = FALSE, idx = NULL, cluster = NULL
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Martin Aryee <aryee@jhu.edu>
 }
+
 \note{
 %%  ~~further notes~~
 }

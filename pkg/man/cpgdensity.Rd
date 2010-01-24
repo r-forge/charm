@@ -5,88 +5,47 @@
 Get CpG density for genomic regions
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Calculate the CpG density for a set of windows
 }
 \usage{
 cpgdensity(subject, chr, pos, windowSize = 500, sequence = "CG", showProgress = FALSE)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{subject}{
-%%     ~~Describe \code{subject} here~~
-}
+BSGenome object (e.g. Hsapiens)}
   \item{chr}{
-%%     ~~Describe \code{chr} here~~
+character vector
 }
   \item{pos}{
-%%     ~~Describe \code{pos} here~~
+numeric vector
 }
   \item{windowSize}{
-%%     ~~Describe \code{windowSize} here~~
+number value
 }
   \item{sequence}{
-%%     ~~Describe \code{sequence} here~~
+character string
 }
   \item{showProgress}{
-%%     ~~Describe \code{showProgress} here~~
+boolean
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+Calculate the CpG density for a set of regions. chr and pos specify the region mid-points and windowSize specifies the size of the window to be centered on these mid-points. i.e. The window will stretch from pos-windowSize/2 to pos+windowSize/2
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
-}
-\references{
-%% ~put references to the literature/web site here ~
+a numeric vector 
 }
 \author{
-%%  ~~who you are~~
-}
-\note{
-%%  ~~further notes~~
+Martin Aryee <aryee@jhu.edu>
 }
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
 
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
-## The function is currently defined as
-function (subject, chr, pos, windowSize = 500, sequence = "CG", 
-    showProgress = FALSE) 
-{
-    idx <- split(1:length(chr), chr)
-    s <- DNAString(sequence)
-    cpgdensity <- rep(NA, length(pos))
-    for (curchr in (names(idx))) {
-        if (showProgress) 
-            cat(".")
-        if (curchr \%in\% names(subject)) {
-            chrseq <- subject[[curchr]]
-            curpos <- pos[idx[[curchr]]]
-            v <- suppressWarnings(Views(chrseq, start = curpos - 
-                windowSize/2, end = curpos + windowSize/2))
-            d <- suppressWarnings(DNAStringSet(v))
-            numcpg <- vcountPattern(s, d, fixed = TRUE)
-            cpgdensity[idx[[curchr]]] <- numcpg/windowSize
-        }
-    }
-    if (showProgress) 
-        cat("\n")
-    cpgdensity
-  }
+	if (require(BSgenome.Hsapiens.UCSC.hg18)){
+		chr <- c("chr1", "chr1", "chr2")
+		pos <- c(100000, 100500, 100000)
+		cpgd <- cpgdensity(Hsapiens, chr=chr, pos=pos, windowSize = 500)
+		cpgd
+	}
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+

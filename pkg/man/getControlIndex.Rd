@@ -5,7 +5,7 @@
 Get indices of control probes from CpG-free regions
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Get indices of control probes from CpG-free regions. 
 }
 \usage{
 getControlIndex(dat, controlProbes = c("CONTROL_PROBES", "CONTROL_REGIONS"), noCpGWindow = NULL, subject, onlyGood = FALSE, matrix = TRUE)
@@ -32,7 +32,7 @@ getControlIndex(dat, controlProbes = c("CONTROL_PROBES", "CONTROL_REGIONS"), noC
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+The probes can either be identified as control probes in the microarray annotation package, or alternatively the function will search the genome (given an appropriate BSgenome object) for suitable probes. 
 }
 \value{
 %%  ~Describe the value returned
@@ -45,8 +45,9 @@ getControlIndex(dat, controlProbes = c("CONTROL_PROBES", "CONTROL_REGIONS"), noC
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Martin Aryee <aryee@jhu.edu>
 }
+
 \note{
 %%  ~~further notes~~
 }

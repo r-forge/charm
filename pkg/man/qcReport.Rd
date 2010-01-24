@@ -5,8 +5,7 @@
 Microarray quality report
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
-}
+Calculate microarray quality scores and produce an optional pdf report}
 \usage{
 qcReport(dat, file = NULL, utRange = c(30, 100), enRange = c(8, 12), numProbes = 5e+05, cluster = NULL)
 }
@@ -45,8 +44,9 @@ qcReport(dat, file = NULL, utRange = c(30, 100), enRange = c(8, 12), numProbes =
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Martin Aryee <aryee@jhu.edu>
 }
+
 \note{
 %%  ~~further notes~~
 }

@@ -5,7 +5,7 @@
 Between-sample normalization
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Between-sample normalization for two-color DNA methylation microarray data.
 }
 \usage{
 normalizeBetweenSamples(dat, m = "allQuantiles", untreated = "none", enriched = "none", mapping = "affinity", numSegments = 3, controlProbes = "CONTROL_REGIONS", controlIndex = NULL, cluster = NULL, verbose = FALSE)
@@ -57,8 +57,9 @@ normalizeBetweenSamples(dat, m = "allQuantiles", untreated = "none", enriched = 
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Martin Aryee <aryee@jhu.edu>
 }
+
 \note{
 %%  ~~further notes~~
 }

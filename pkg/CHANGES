@@ -1,3 +1,19 @@
+v0.9.29
+Starting removing ff code
+Renamed lowRam.R to lowRam.R.ignore
+Removed ff and bit from DESCRIPTION and NAMESPACE. 
+Removed cluster option from bgAdjustBgp
+Removed calls to stopCluster
+Removed saveRam option from readCharm
+Documentation improvements
+Renamed charm.Rnw to charm.Rnw.ignore
+Removed annotateDMRs, closestTSS, findClosestGeneTxt, findClosestGene
+Removed from Depends: snow
+Removed from Imports: genefilter, ACME
+Removed from Suggests: BSgenome, BSgenome.Hsapiens.UCSC.hg18, org.Hs.eg.db, BSgenome.Mmusculus.UCSC.mm8, org.Mm.eg.db
+Removed require(genefilter) from get.tog
+Removed require(snow) from .onAttach 
+
 v0.9.28
 Fixed a bug in dmrFdr where permutation areas were calculated using logit(p) instead of p
 
