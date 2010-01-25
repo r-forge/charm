@@ -1,3 +1,6 @@
+v0.9.30
+Updated lowRam.R.ignore and charm.Rnw.ignore in svn
+
 v0.9.29
 Starting removing ff code
 Renamed lowRam.R to lowRam.R.ignore
