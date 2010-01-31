@@ -1,3 +1,10 @@
+v0.9.31
+Documentation updates
+bgAdjustBgp: ceiling Inf values to the next highest value. Removed ff code
+scaleSamples: Added na.rm=TRUE to quantile
+logmethParameters: Added na.rm=TRUE to parameter estimation
+moved scaleSamples from methp to normalizeWithinSamples
+
 v0.9.30
 Updated lowRam.R.ignore and charm.Rnw.ignore in svn
 

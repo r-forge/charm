@@ -27,8 +27,6 @@ a numeric vector
 Martin Aryee <aryee@jhu.edu>
 }
 
-
-
 \seealso{
 \code{\link{readCharm}}
 }
@@ -37,6 +35,7 @@ Martin Aryee <aryee@jhu.edu>
 		dataDir <- system.file("data", package="charmData")
 		setwd(dataDir)
 		pd <- read.delim("sample_description_file.txt")
+		pd <- subset(pd, Individual=="441" & Tissue_Type=="liver")	
 		rawData <- readCharm(files=pd$Filename, sampleKey=pd)
 		ngc <- countGC(rawData)
 		head(ngc)

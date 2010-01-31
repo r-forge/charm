@@ -8,8 +8,8 @@ methp <- function(dat, spatial=TRUE, spatialMethod="kernel",
 		spatial1d=NULL, spatial2d=NULL, 
 		bgSubtract=TRUE,
 		withinSampleNorm="loess", binSize=500, numSegments=3, useTot=TRUE,
-		betweenSampleNorm="quantile", 
 		scale=c(0.99, 0.99),
+		betweenSampleNorm="quantile", 
         minQCScore=NULL, 
 		controlProbes=c("CONTROL_PROBES", "CONTROL_REGIONS"),
 		controlIndex=NULL, 
@@ -101,12 +101,10 @@ methp <- function(dat, spatial=TRUE, spatialMethod="kernel",
 		controlIndex <- getControlIndex(dat, noCpGWindow=ctrlNoCpGWindow, subject=subject, controlProbes=controlProbes)
 	}
 	if (verbose) cat("Within sample normalization: ", withinSampleNorm, "\n", sep="") 
-	dat <- normalizeWithinSamples(dat, method=withinSampleNorm, useTot=useTot,
+	dat <- normalizeWithinSamples(dat, method=withinSampleNorm,
+		scale=scale, useTot=useTot,
 		binSize=binSize, numSegments=numSegments, cluster=cl,
 		controlIndex=controlIndex, verbose=verbose)
-	
-	# Scale	
-	dat <- scaleSamples(dat, scale)
 
     # Between sample normalization    
     #if (verbose) cat("Between sample normalization. 
@@ -162,13 +160,13 @@ methp <- function(dat, spatial=TRUE, spatialMethod="kernel",
 }
 
 
-scaleSamples <- function(dat, scale) {
+scaleSamples <- function(dat, scale=c(0.99, 0.99)) {
 	if (length(scale)==2) {
 		pms <- pm(dat)
 		c1 <- log2(pms[,,1])
 		c2 <- log2(pms[,,2])
 		M <- c1-c2		
-		x <- apply(M, 2, quantile, scale[1])
+		x <- apply(M, 2, quantile, scale[1], na.rm=TRUE)
 		adj <- x / -log(1-scale[2])
 		M <- sweep(M, 2, adj, FUN="/")
 		c2 <- c1-M
@@ -389,7 +387,7 @@ regionFilter <- function(x, region, f) {
 }
 
 normalizeWithinSamples <- function (dat, method = "loess", 
-	controlProbes = "CONTROL_REGIONS", 
+	scale=c(0.99, 0.99), controlProbes = "CONTROL_REGIONS", 
 	controlIndex = NULL, numSegments=3, bins=NULL, binSize=500,
 	approx=TRUE, breaks=1000, useTot=TRUE,
 	cluster=NULL, verbose=FALSE) {
@@ -435,7 +433,8 @@ normalizeWithinSamples <- function (dat, method = "loess",
         datPm[, , "channel2"] <- sweep(datPm[, , "channel2"], 
             2, mAdj, FUN = "+")
         pm(dat) <- 2^datPm
-    } 
+    }
+	dat <- scaleSamples(dat, scale) 
     return(dat)
 }
 
@@ -1448,33 +1447,28 @@ bgAdjustBgp <- function (dat) {
 	bgs <- bg(dat)
     Ngc <- countGC(dat, "pm")
     bgNgc <- countGC(dat, "bg")
-    if (class(dat)=="OfflineTilingFeatureSet2") {
-		cl <- charmCluster(cluster)
-		parLapply(cl, 1:dim(dat)["Samples"], function(samp, pms, bgs, Ngc, bgNgc) {
-	    	for (chan in 1:2) {
-	            param <- bgParametersBgp(pms[,samp,chan], bgs[,samp,chan], Ngc, bgNgc, n.pts=2^14)
-	            b <- param$sigma
-	            pms[,samp,chan] <- pms[,samp,chan] - param$mu.gc[Ngc] - param$alpha * b^2
-	            pms[,samp,chan] <- pms[,samp,chan] + b * ((1/sqrt(2 * pi)) * exp((-1/2) * ((pms[,samp,chan]/b)^2)))/pnorm(pms[,samp,chan]/b)
-	            bgs[,samp,chan] <- bgs[,samp,chan] - param$mu.gc[bgNgc] - param$alpha * b^2
-	            bgs[,samp,chan] <- bgs[,samp,chan] + b * ((1/sqrt(2 * pi)) * exp((-1/2) * ((bgs[,samp,chan]/b)^2)))/pnorm(bgs[,samp,chan]/b)
-			}
-			return(NULL) ## the ff object is already updated on disk	
-	    }, pms, bgs, Ngc, bgNgc)
-	} else {
-		for (samp in 1:ncol(pms)) {
-	    	for (chan in 1:2) {
-	            param <- bgParametersBgp(pms[,samp,chan], bgs[,samp,chan], Ngc, bgNgc, n.pts=2^14)
-	            b <- param$sigma
-	            pms[,samp,chan] <- pms[,samp,chan] - param$mu.gc[Ngc] - param$alpha * b^2
-	            pms[,samp,chan] <- pms[,samp,chan] + b * ((1/sqrt(2 * pi)) * exp((-1/2) * ((pms[,samp,chan]/b)^2)))/pnorm(pms[,samp,chan]/b)
-	            bgs[,samp,chan] <- bgs[,samp,chan] - param$mu.gc[bgNgc] - param$alpha * b^2
-	            bgs[,samp,chan] <- bgs[,samp,chan] + b * ((1/sqrt(2 * pi)) * exp((-1/2) * ((bgs[,samp,chan]/b)^2)))/pnorm(bgs[,samp,chan]/b)
-			}
-		}		
-    	pm(dat) <- pms
-	    bg(dat) <- bgs
+	for (samp in 1:ncol(pms)) {
+    	for (chan in 1:2) {
+            param <- bgParametersBgp(pms[,samp,chan], bgs[,samp,chan], Ngc, bgNgc, n.pts=2^14)
+            b <- param$sigma
+            pms[,samp,chan] <- pms[,samp,chan] - param$mu.gc[Ngc] - param$alpha * b^2
+            pms[,samp,chan] <- pms[,samp,chan] + b * ((1/sqrt(2 * pi)) * exp((-1/2) * ((pms[,samp,chan]/b)^2)))/pnorm(pms[,samp,chan]/b)
+            bgs[,samp,chan] <- bgs[,samp,chan] - param$mu.gc[bgNgc] - param$alpha * b^2
+            bgs[,samp,chan] <- bgs[,samp,chan] + b * ((1/sqrt(2 * pi)) * exp((-1/2) * ((bgs[,samp,chan]/b)^2)))/pnorm(bgs[,samp,chan]/b)
+		}
 	}
+	isInf <- which(is.infinite(pms))
+	if (length(isInf)>0) {
+		biggest <- max(pms[-isInf], na.rm=TRUE)		
+		pms[isInf] <- biggest
+	}
+	isInf <- which(is.infinite(bgs))
+	if (length(isInf)>0) {
+		biggest <- max(bgs[-isInf], na.rm=TRUE)		
+		bgs[isInf] <- biggest
+	}
+   	pm(dat) <- pms
+    bg(dat) <- bgs
     return(dat)
 }
 
@@ -1484,23 +1478,23 @@ bgAdjustBgp <- function (dat) {
 ## Calculate E(Y|S)
 logmethParameters <- function (pm, ngc, n.pts = 2^14) 
 {
-    max.density <- function(x, n.pts) {
-        aux <- density(x, kernel = "epanechnikov", n = n.pts, 
-            na.rm = TRUE)
-        aux$x[order(-aux$y)[1]]
-    }
+    #max.density <- function(x, n.pts) {
+    #    aux <- density(x, kernel = "epanechnikov", n = n.pts, 
+    #        na.rm = TRUE)
+    #    aux$x[order(-aux$y)[1]]
+    #}
     pmbg <- 0
     bg.data <- pm[pm < pmbg]
     #bgsd <- mad(bg.data, center=0, constant=1)
     #bgsd <- mad(bg.data, center=0)
     idx <- pm < pmbg
-    bgsd <- median(tapply(pm[idx], ngc[idx], mad, center=0))
+    bgsd <- median(tapply(pm[idx], ngc[idx], mad, center=0, na.rm=TRUE))
     sig.data <- pm[pm > pmbg]
     sig.data <- sig.data - pmbg
     #cat("Debug logmethParameters(): sig.data =", 
     #    100*round(length(sig.data)/length(pm), 2), "%\n")
     #expmean <- max.density(sig.data, n.pts)
-	expmean <- mean(sig.data)
+	expmean <- mean(sig.data, na.rm=TRUE)
     alpha <- 1/expmean
     mubg <- pmbg
     list(alpha = alpha, mu = mubg, sigma = bgsd)

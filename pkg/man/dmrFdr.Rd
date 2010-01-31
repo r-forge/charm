@@ -40,3 +40,22 @@ Martin Aryee <aryee@jhu.edu>
 \seealso{
 \code{\link{dmrFinder}}
 }
+\examples{
+	if (require(charmData) & require(pd.feinberg.hg18.me.hx1)) {
+		dataDir <- system.file("data", package="charmData")
+		setwd(dataDir)
+		# Read in raw data
+		pd <- read.delim("sample_description_file.txt")
+		rawData <- readCharm(files=pd$Filename, sampleKey=pd)
+		# Estimate methylation
+		p <- methp(rawData)
+		# Find differentially methylated regions
+		grp <- pData(rawData)$Tissue_Type
+		dmr <- dmrFinder(rawData, p=p, groups=grp)
+		names(dmr$tabs)
+		head(dmr$tabs[[1]])
+		# Estimate false discovery rate for DMRs
+		dmr <- dmrFdr(dmr) 
+		head(dmr$tabs[[1]])
+	}
+}

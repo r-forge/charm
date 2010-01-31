@@ -4,7 +4,7 @@
 Remove background
 }
 \description{
-Background removal
+Estimate and remove background signal using anti-genomic background probes
 }
 \usage{
 bgAdjustBgp(dat)
@@ -25,15 +25,13 @@ a TilingFeatureSet
 Martin Aryee <aryee@jhu.edu>
 }
 
-
-
 \examples{
 	if (require(charmData) & require(pd.feinberg.hg18.me.hx1)) {
 		dataDir <- system.file("data", package="charmData")
 		setwd(dataDir)
 		pd <- read.delim("sample_description_file.txt")
+		pd <- subset(pd, Individual=="441" & Tissue_Type=="liver")
 		rawData <- readCharm(files=pd$Filename, sampleKey=pd)
 		dat <- bgAdjustBgp(rawData)
 	}
-
 }
