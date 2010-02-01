@@ -1,3 +1,6 @@
+v0.9.32
+getControlIndex: check for a file called controlIndex.rda in the data dir before using the container information
+
 v0.9.31
 Documentation updates
 bgAdjustBgp: ceiling Inf values to the next highest value. Removed ff code

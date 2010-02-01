@@ -809,7 +809,13 @@ getAffinity <- function(dat, type="pm", channel=2, idx=NULL, returnIdx=NULL, exc
 getControlIndex <- function(dat, controlProbes=c("CONTROL_PROBES", "CONTROL_REGIONS"), 
 			noCpGWindow=NULL, subject, onlyGood=FALSE, matrix=TRUE) {
     if (is.null(noCpGWindow)) {
-        controlIndex <- which(getContainer(dat) %in% controlProbes)
+		file <- file.path(system.file(package = annotation(dat)), 
+		    "data", "controlIndex.rda")
+		if (file.exists(file)) {
+		    load(file)
+		} else {
+        	controlIndex <- which(getContainer(dat) %in% controlProbes)
+		}
     } else {
         if (class(subject)!="BSgenome")
             stop("You must supply a BSgenome object for subject if using the noCpGWindow option. E.g. Hsapiens from the BSgenome.Hsapiens.UCSC.hg18 package.\n")
