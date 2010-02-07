@@ -33,13 +33,13 @@ vector of chromosomal coordinates for the probes in eset, p or l
 vector of region names for the probes in eset, p or l
 }
   \item{sdBins}{
-not used
+not currently used
 }
   \item{controlIndex}{
 vector of indices of non-CpG control probes
 }
   \item{Indexes}{
-not uses
+not currently used
 }
   \item{filter}{
 smoothing window weights. See details
@@ -57,45 +57,42 @@ Verbose progress reporting
 the groups between which to find DMRs.
 }
   \item{bgSubtract}{
-%%     ~~Describe \code{bgSubtract} here~~
+boolean. Remove background signal?
 }
   \item{withinSampleNorm}{
-%%     ~~Describe \code{withinSampleNorm} here~~
+within-sample normalization method. "loess" or "none"
 }
   \item{binSize}{
-%%     ~~Describe \code{binSize} here~~
+not currently used
 }
   \item{numSegments}{
-%%     ~~Describe \code{numSegments} here~~
+not currently used
 }
   \item{betweenSampleNorm}{
-%%     ~~Describe \code{betweenSampleNorm} here~~
+between-sample normalization method. "quantile", "sqn" or "none"
 }
   \item{minQCScore}{
-%%     ~~Describe \code{minQCScore} here~~
+not currently used
 }
   \item{controlProbes}{
-%%     ~~Describe \code{controlProbes} here~~
+not currently used
 }
   \item{cluster}{
-%%     ~~Describe \code{cluster} here~~
+not currently used
 }
   \item{cutoff}{
-%%     ~~Describe \code{cutoff} here~~
+not currently used
 }
   \item{\dots}{
-%%     ~~Describe \code{\dots} here~~
+further options to be passed to methp
 }
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+a list of the same format as that from \code{\link{dmrFinder}} with the extra columns qval (Q-value) in the tabs slot.
+
 }
 \author{
 Martin Aryee <aryee@jhu.edu>

@@ -1719,7 +1719,7 @@ get.tt <- function(lm,ls,ns,filter,Indexes,COMPS,ws,verbose){
   }
   if(!isTRUE(all.equal(sum(filter),1))) stop("filter must sum to 1.")
   
-  if(verbose) cat("Smoothing")
+  if(verbose) cat("Smoothing:\n")
   dm=matrix(0,nrow(lm),nrow(COMPS))
   cnames = vector("character",nrow(COMPS))
   for(r in 1:ncol(dm)) cnames[r]=paste(colnames(lm)[COMPS[r,]],collapse="-")
@@ -1734,8 +1734,9 @@ get.tt <- function(lm,ls,ns,filter,Indexes,COMPS,ws,verbose){
       dm[,r]=lm[,j]-lm[,k]
       vr[,r]=(ls[,j]^2)/ns[j]+(ls[,k]^2)/ns[k]
   }
+  if(verbose) pb = txtProgressBar(min=1, max=length(Indexes), initial=0, style=3)
   for(i in seq(along=Indexes)){
-    if(verbose) if(i%%1000==0) cat(".")
+    #if(verbose) if(i%%1000==0) cat(".")
     Index=Indexes[[i]]
     for(r in 1:nrow(COMPS)){
         j=COMPS[r,1]
@@ -1743,30 +1744,23 @@ get.tt <- function(lm,ls,ns,filter,Indexes,COMPS,ws,verbose){
         sdm[Index,r]=myfilter(dm[Index,r],filter)
         if(ns[j]==1|ns[k]==1){ svr[Index,r] = 1} else{ svr[Index,r] = myfilterse(vr[Index,r],filter) }
     }
+    if(verbose) setTxtProgressBar(pb, i)
   }
+  if(verbose) close(pb)
   for(r in 1:nrow(COMPS)) tt[,r] = sdm[,r]/svr[,r]
   if(verbose) cat("Done.\n")
   return(tt)
 }
 
 
-dmrFinder <- function(eset=NULL,groups,p=NULL,l=NULL,chr=NULL,pos=NULL,pns=NULL,
-					  sdBins=NULL, controlIndex=NULL,Indexes=NULL, 
-					  filter=NULL,package=NULL,ws=7,
-                      verbose=TRUE,compare="all",
-					  bgSubtract=TRUE,
-		      		  withinSampleNorm="loess", binSize=500, numSegments=3,
-					  betweenSampleNorm="quantile",
-                      minQCScore=NULL, 
-					  controlProbes=c("CONTROL_PROBES", "CONTROL_REGIONS"), 
-					  cluster=NULL,
-					  cutoff=0.995,...){
+dmrFinder <- function(eset=NULL, groups, p=NULL, l=NULL, chr=NULL, pos=NULL, pns=NULL, sdBins=NULL, controlIndex=NULL, Indexes=NULL, filter=NULL, package=NULL, ws=7, verbose=TRUE, compare="all", bgSubtract=TRUE, withinSampleNorm="loess", binSize=500, numSegments=3, betweenSampleNorm="quantile", minQCScore=NULL, controlProbes=c("CONTROL_PROBES", "CONTROL_REGIONS"), cluster=NULL, cutoff=0.995, sortby="ttarea",...){
+
   groups = as.character(groups)
   if(identical(compare,"all")) compare=comp(groups)
   if(length(compare)%%2!=0) stop("compare must have an even number of elements.")
 
   args=list(filter=filter, ws=ws, betweenSampleNorm=betweenSampleNorm, 
-	withinSampleNorm=withinSampleNorm, minQCScore=minQCScore,
+	    withinSampleNorm=withinSampleNorm, minQCScore=minQCScore,
             controlProbes=controlProbes, cutoff=cutoff)
 
   # dmrFinder must be given either eset or p/l,chr,pos,pns, and controlIndex
@@ -1775,10 +1769,10 @@ dmrFinder <- function(eset=NULL,groups,p=NULL,l=NULL,chr=NULL,pos=NULL,pns=NULL,
   # l=logit(p). Indexes=split(seq(along=pns),pns).
   if(is.null(eset)){
       if (is.null("p") & is.null("l")) stop("p or l must be supplied.")
-      args = c("chr","pos","pns","controlIndex")
-      nulls = sapply(args,function(x) is.null(get(x)))
+      Args = c("chr","pos","pns","controlIndex","package")
+      nulls = sapply(Args,function(x) is.null(get(x)))
       if(any(nulls))
-        stop(paste("The following arguments are missing:", paste(args[nulls], collapse=", ")))
+        stop(paste("The following arguments are missing:", paste(Args[nulls], collapse=", ")))
       lens = c( nrow(p), nrow(l), length(chr), length(pos), length(pns) ) 
       if(length(unique(lens))!=1)
         stop("p, l, chr, pos, and/or pns are incompatible.")
@@ -1909,28 +1903,29 @@ dmrFinder <- function(eset=NULL,groups,p=NULL,l=NULL,chr=NULL,pos=NULL,pns=NULL,
            regionName=tapply(pns[Index],segmentation[Index],function(x) x[1]),
            indexStart=tapply(Index,segmentation[Index],min),
            indexEnd=tapply(Index,segmentation[Index],max))
+          length=res[[r]]$indexEnd-res[[r]]$indexStart+1
 	  if (is.null(p)) { #  We return log-ratios
-		  colnames(res[[r]]) <- sub("p1", "m1", colnames(res[[r]]))
-		  colnames(res[[r]]) <- sub("p2", "m2", colnames(res[[r]]))
+	      colnames(res[[r]]) <- sub("p1", "m1", colnames(res[[r]]))
+	      colnames(res[[r]]) <- sub("p2", "m2", colnames(res[[r]]))
 	      res[[r]]$m1=tapply(lm[Index,j],segmentation[Index],mean)
-          res[[r]]$m2=tapply(lm[Index,k],segmentation[Index],mean)
-    	  length=res[[r]]$indexEnd-res[[r]]$indexStart+1
-		  area=abs(res[[r]]$m2-res[[r]]$m1)*length		
-		  res[[r]]$area=area
+              res[[r]]$m2=tapply(lm[Index,k],segmentation[Index],mean)
+	      area=abs(res[[r]]$m2-res[[r]]$m1)*length
+	      res[[r]]$area=area
 	  } else { # We return percentages
 	      res[[r]]$p1=tapply(1/(1+exp(-lm[Index,j])),segmentation[Index],mean)
-          res[[r]]$p2=tapply(1/(1+exp(-lm[Index,k])),segmentation[Index],mean)
-    	  length=res[[r]]$indexEnd-res[[r]]$indexStart+1
-		  area=abs(res[[r]]$p2-res[[r]]$p1)*length
-		  res[[r]]$area=area
+              res[[r]]$p2=tapply(1/(1+exp(-lm[Index,k])),segmentation[Index],mean)
+	      area=abs(res[[r]]$p2-res[[r]]$p1)*length
+	      res[[r]]$area=area
 	  }
-      res[[r]]=res[[r]][order(-area),]
+      ttarea = abs(tapply(tt[Index,r],segmentation[Index],mean)) *length
+      res[[r]]$ttarea = ttarea
+      if(sortby=="area")   res[[r]]=res[[r]][order(-area),]
+      if(sortby=="ttarea") res[[r]]=res[[r]][order(-ttarea),]
   }
   if(verbose) cat("\nDone\n")
-  return(list(tabs=res,p=p,l=l,chr=chr,pos=pos,pns=pns,
-		      index=index,controlIndex=controlIndex,
-              gm=lm,groups=groups,args=args,cutoff=cutoff,
-			  filter=filter,ws=ws,comps=COMPS,package=package))
+  return(list(tabs=res, p=p, l=l, chr=chr, pos=pos, pns=pns, 
+              index=index, controlIndex=controlIndex, gm=lm,
+              groups=groups, args=args, comps=COMPS, package=package))
 }
 
 dmrFdr <- function(dmr, compare=1, numPerms=1000, seed=NULL, verbose=TRUE) {
@@ -1974,12 +1969,12 @@ dmrFdr <- function(dmr, compare=1, numPerms=1000, seed=NULL, verbose=TRUE) {
 		groups[grp1[i,]] <- "grp1"
 		if (is.null(dmr$p)) {
 			st <- system.time(dmrPerm <- dmrFinder(dmr$package, l=l, 
-				groups=groups, cutoff=dmr$cutoff, 
-				filter=dmr$filter, ws=dmr$ws, verbose=FALSE))[3]
+				groups=groups, cutoff=dmr$args$cutoff, 
+				filter=dmr$args$filter, ws=dmr$args$ws, verbose=FALSE))[3]
 		} else {
 			st <- system.time(dmrPerm <- dmrFinder(dmr$package, p=p, 
-				groups=groups, cutoff=dmr$cutoff, 
-				filter=dmr$filter, ws=dmr$ws, verbose=FALSE))[3]
+				groups=groups, cutoff=dmr$args$cutoff, 
+				filter=dmr$args$filter, ws=dmr$args$ws, verbose=FALSE))[3]
 		}
 		if (verbose & (i %in% round(seq(1, numPerms, length.out=10)))) {
 			cat(i, "/", numPerms, " (", prettyTime((numPerms-i)*st), 
@@ -2008,6 +2003,109 @@ prettyTime <- function(seconds) {
 		sep="")
 	ret
 }
+
+
+validatePd <- function(df, fileNameColumn, sampleNameColumn, 
+		groupColumn, ut = "_532.xys", md = "_635.xys") {
+	msg <- ""
+	cat("Filenames:\n")
+	if (missing(fileNameColumn)) {
+		fileNameColumn <- which.max(apply(df, 2, function(col) {
+			u <- grep(ut, col, ignore.case=TRUE)
+			m <- grep(md, col, ignore.case=TRUE)
+			length(c(u,m))
+		}))
+		cat("  fileNameColumn not specified. Trying to guess.\n")	
+	}
+	files <- df[,fileNameColumn]
+	o <- order(files)
+	files <- files[o]
+	df <- df[o,]
+	utIdx <- grep(ut, files)
+	if (length(utIdx)==0) {
+		msg <- paste(msg, "  No files in column", fileNameColumn, "match the untreated extension ", ut, ". Please use the ut option to set the correct extension\n")
+	}
+	mdIdx <- grep(md, files)
+	if (length(mdIdx)==0) {
+		msg <- paste(msg, "  No files in column", fileNameColumn, "match the methyl-depleted extension ", md, ". Please use the md option to set the correct extension\n")
+	}
+	filesUt <- sub(ut, "", files[utIdx])
+	filesMd <- sub(md, "", files[mdIdx])
+	missing <- c(filesUt[!filesUt%in%filesMd], filesMd[!filesMd%in%filesUt])
+	if (length(missing)>0) {
+		msg <- paste(msg, "  The untreated (ut) and methyl-depleted (md) file names in column ", fileNameColumn, " don't match up. Check ", paste(missing, collapse=", "), sep="")
+	}
+	if (length(missing)>0 | length(utIdx)==0 | length(mdIdx)==0) {
+		cat("  ERROR - ", msg, "\n")
+		return(FALSE)	
+	} else {
+		cat("  OK - Found in column", fileNameColumn, "\n")
+	}
+
+	channelMatch <- apply(df[utIdx,]==df[mdIdx,], 2, all)
+	onePerSample <- apply(df[utIdx,], 2, function(x) length(unique(x)))==length(utIdx)
+
+	cat("Sample names:\n")
+	if (missing(sampleNameColumn)) {
+		cat("  sampleNameColumn column not specified. Trying to guess.\n")	
+		sampleNameColumn <- which(channelMatch & onePerSample)	
+		if (length(sampleNameColumn)==1) {
+			cat("  OK - Found in column", sampleNameColumn, "\n")
+		} else if (length(sampleNameColumn)==0) {
+			cat("  ERROR - No suitable sample ID column found. This column should have the same entry for each pair of untreated and methyl-depleted filenames.")
+			return(FALSE)
+		} else if (length(sampleNameColumn)>1) {
+			cat("  WARNING - Multiple columns (", paste(sampleNameColumn, collapse=", "), 
+				") are candidates for sample ID. Arbitrarily choosing column ", 
+				sampleNameColumn[1], ".", sep="")
+				sampleNameColumn <- sampleNameColumn[1]
+		}
+	} else { # User specified sampleNameColumn
+		if (channelMatch[sampleNameColumn] & onePerSample[sampleNameColumn]) {
+			cat("  OK - Found in column", sampleNameColumn, "\n")
+		} else {
+			if (!channelMatch[sampleNameColumn]) {
+				msg <- paste(msg, "  There are samples with different values in column ", sampleNameColumn, " for their untreated and methyl-depleted rows\n", sep="")
+			} else if (!onePerSample[sampleNameColumn]) {
+				msg <- paste(msg, "  The sample IDs in column ", sampleNameColumn, " are not unique to each sample\n", sep="")
+			}
+			cat("  ERROR -", msg, "\n")
+			return(FALSE)
+		}
+	}
+	cat("Group labels:\n")
+	if (missing(groupColumn)) {
+		cat("  groupColumn column not specified. Trying to guess.\n")	
+		groupColumn <- which(channelMatch & !onePerSample)
+		if (length(groupColumn)==1) {
+			cat("  OK - Found in column", groupColumn, "\n")
+		} else if (length(groupColumn)==0) {
+			cat("  ERROR - No suitable group label column found. If there are no replicates you can set groupColumn to be the same as sampleNameColumn\n")
+			return(FALSE)
+		} else if (length(groupColumn)>1) {
+			warning("  WARNING - Multiple columns (", 
+				paste(groupColumn, collapse=", "), 
+				") are candidates for group labels. Arbitrarily choosing column ", 
+				groupColumn[1], ".", sep="")
+				groupColumn <- groupColumn[1]
+		}
+	} else { # User specified groupColumn
+		if (channelMatch[groupColumn] & !onePerSample[groupColumn]) {
+			cat("  OK - Found in column", groupColumn, "\n")
+		} else {
+			if (!channelMatch[groupColumn]) {
+				cat("  ERROR - There are samples with different values in column ", groupColumn, " for their untreated and methyl-depleted rows\n", sep="")
+				return(FALSE)
+			} else if (onePerSample[groupColumn]) {
+				cat("  WARNING - Each group has only 1 sample\n")
+			}
+		}
+	}
+	return(list(fileNameColumn=fileNameColumn, 
+			sampleNameColumn=sampleNameColumn,
+			groupColumn=groupColumn))
+}
+
 
 .onAttach <- function(libname, pkgname) {
  message("Welcome to charm version ", packageDescription("charm", field="Version"))

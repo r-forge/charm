@@ -1,3 +1,14 @@
+v0.9.33
+dmrFinder changes (Peter Murakami):
+- Changed the way get.tt progress is reported from dots to a progress bar.
+- Made 'package' a required argument of dmrFinder if eset is not provided.
+- Enabled sorting of dmr table in dmrFinder by 'ttarea' instead of 'area'.
+- Removed cutoff, filter, and ws from dmrFinder's returned list object, - since they are already returned in 'args', and it is from 'args' that the results() function takes them.
+- Fixed indendatation
+dmrFdr: changed references to dmr$cutoff, dmr$filter and dmr$ws to dmr$args$cutoff, dmr$args$filter and dmr$args$ws
+Added NEWS
+Added validatePd
+
 v0.9.32
 getControlIndex: check for a file called controlIndex.rda in the data dir before using the container information
 
