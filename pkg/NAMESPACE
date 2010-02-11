@@ -3,13 +3,9 @@ importClassesFrom(oligoClasses, TilingFeatureSet)
 
 import(oligo)
 importFrom(preprocessCore, normalize.quantiles)
-importFrom(Biostrings, DNAStringSet, alphabetFrequency)
-importFrom(IRanges, narrow, width)
-importFrom(spatial, surf.ls, predict.trls)
+importFrom(Biostrings, DNAString, DNAStringSet, alphabetFrequency, unmasked, vcountPattern)
+importFrom(IRanges, narrow, width, Views)
 importFrom(siggenes, pi0.est, qvalue.cal)
 importFrom(gtools, combinations)
-importFrom(affxparser, readCel, readCelHeader)
 
-export(bgAdjustBgp, countGC, cpgdensity, dmrFdr, dmrFinder, getControlIndex, methPercent, methp, 
-normalizeBetweenSamples, normalizeWithinSamples, plotDensity, pmQuality, qcReport, readCharm, 
-spatialAdjust)
+export(bgAdjustBgp, countGC, cpgdensity, dmrFdr, dmrFinder, getControlIndex, methPercent, methp, normalizeBetweenSamples, normalizeWithinSamples, plotDensity, qcReport, readCharm, spatialAdjust, validatePd)

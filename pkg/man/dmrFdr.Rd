@@ -27,7 +27,7 @@ Boolean
 }
 }
 \details{
-This function estimates false discovery rate q-values for a dmr object returned by \code{\link{dmrFinder}}. dmrFinder can return a set of DMR tables with one or more pair-wise comparisons between groups. dmrFdr currently only calculated q-values for one of these at a time. The dmr table to use is specified by the compare option.
+This function estimates false discovery rate q-values for a dmr object returned by \code{\link{dmrFinder}}. dmrFinder can return a set of DMR tables with one or more pair-wise comparisons between groups. dmrFdr currently only calculated q-values for one of these at a time. The dmr table to use (if the dmr object contains more than one) is specified by the compare option.
 }
 \value{
 a list object in the same format as the input, but with extra p-val and q-val columns for the tabs element.
@@ -41,21 +41,25 @@ Martin Aryee <aryee@jhu.edu>
 \code{\link{dmrFinder}}
 }
 \examples{
-	if (require(charmData) & require(pd.feinberg.hg18.me.hx1)) {
+	if (require(charmData) & require(BSgenome.Hsapiens.UCSC.hg18)) {
 		dataDir <- system.file("data", package="charmData")
 		setwd(dataDir)
+		# Validate format of sample description file		
+		pd <- read.delim("phenodata.txt")
+		res <- validatePd(pd)
 		# Read in raw data
-		pd <- read.delim("sample_description_file.txt")
-		rawData <- readCharm(files=pd$Filename, sampleKey=pd)
+		rawData <- readCharm(files=pd$filename, sampleKey=pd)
+		# Find non-CpG control probes
+		ctrlIdx <- getControlIndex(rawData, subject=Hsapiens)
 		# Estimate methylation
-		p <- methp(rawData)
+		p <- methp(rawData, controlIndex=ctrlIdx)
 		# Find differentially methylated regions
-		grp <- pData(rawData)$Tissue_Type
-		dmr <- dmrFinder(rawData, p=p, groups=grp)
-		names(dmr$tabs)
+		grp <- pData(rawData)$tissue
+		dmr <- dmrFinder(rawData, p=p, groups=grp, 
+			compare=c("liver", "spleen"), cutoff=0.95)
 		head(dmr$tabs[[1]])
 		# Estimate false discovery rate for DMRs
-		dmr <- dmrFdr(dmr) 
+		dmr <- dmrFdr(dmr, numPerms=3, seed=123) 
 		head(dmr$tabs[[1]])
 	}
 }

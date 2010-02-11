@@ -1,171 +1,53 @@
 \name{qcReport}
 \alias{qcReport}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Microarray quality report
 }
 \description{
 Calculate microarray quality scores and produce an optional pdf report}
 \usage{
-qcReport(dat, file = NULL, utRange = c(30, 100), enRange = c(8, 12), numProbes = 5e+05, cluster = NULL)
+qcReport(dat, file = NULL, utRange = c(30, 100), enRange = c(8, 12), numProbes = 5e+05, blockSize)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{
-%%     ~~Describe \code{dat} here~~
+a TilingFeatureSet
 }
   \item{file}{
-%%     ~~Describe \code{file} here~~
+name of output pdf file
 }
   \item{utRange}{
-%%     ~~Describe \code{utRange} here~~
+color-scale range for the untreated channel plots
 }
   \item{enRange}{
-%%     ~~Describe \code{enRange} here~~
+color-scale range for the methyl-depleted channel plots
 }
   \item{numProbes}{
-%%     ~~Describe \code{numProbes} here~~
+maximum number of probes to use for plots. If smaller than the number of probes on the array numProbes are chosen at random, speeding up calculations for high-density arrays with several million probes.
 }
-  \item{cluster}{
-%%     ~~Describe \code{cluster} here~~
+  \item{blockSize}{
+The array is divided into a series of blockSize x blockSize rectangular blocks and the average signal level calculated for each. If blockSize is unspecified a size is chosen that gives about 1250 probes per block. 
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+This function calculates microarray quality scores and produces an optional pdf report. Three quality metrics are calculated for each array:
+\describe{ 
+\item{Average signal strength.}{The average percentile rank of untreated channel signal probes among the background (anti-genomic) probes. Since the untreated channel contains total DNA a successful hybridization would have strong signal for all untreated channel genomic probes.}
+\item{Untreated channel signal standard deviation.}{The array is divided into a series of rectangular blocks and the average signal level calculated for each. Since probes are arranged randomly on the array there should be no large differences between blocks. Arrays with spatial artifacts have a larger standard deviation between blocks.}
+\item{Methyl-depleted channel signal standard deviation}{}
+}
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
-}
-\references{
-%% ~put references to the literature/web site here ~
-}
+a matrix with a row for each sample. The 3 columns contain array signal strength score, untreated channel standard deviation and methyl-depleted channel standard deviation.}
 \author{
 Martin Aryee <aryee@jhu.edu>
 }
 
-\note{
-%%  ~~further notes~~
-}
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
-## The function is currently defined as
-function (dat, file = NULL, utRange = c(30, 100), enRange = c(8, 
-    12), numProbes = 5e+05, cluster = NULL) 
-{
-    n <- nrow(pm(dat))
-    if (numProbes == -1) 
-        numProbes <- n
-    if (n < numProbes) 
-        numProbes <- n
-    idx <- as.integer(seq(1, n, length.out = numProbes))
-    pmQual <- pmQuality(dat, idx = idx, cluster = cluster)
-    X <- getX(dat, "pm")[idx]
-    Y <- getY(dat, "pm")[idx]
-    imgs1 <- arrayImage(X, Y, pmQual, cluster = cluster)
-    if (class(dat) == "OfflineTilingFeatureSet2") {
-        pms <- pm(dat)
-        c1 <- ff(as.vector(log2(pms[idx, , "channel1"])), dim = c(length(idx), 
-            ncol(pms)), finalizer = "close")
-        colnames(c1) <- colnames(pms)
-        tmp <- arrayImage(X, Y, c1, cluster = cluster)
-        sd1 <- unlist(lapply(tmp, function(x) sd(as.vector(x$z), 
-            na.rm = TRUE)))
-        c2 <- ff(as.vector(log2(pms[idx, , "channel2"])), dim = c(length(idx), 
-            ncol(pms)), finalizer = "close")
-        colnames(c2) <- colnames(pms)
-        imgs2 <- arrayImage(X, Y, c2, cluster = cluster)
-        sd2 <- unlist(lapply(imgs2, function(x) sd(as.vector(x$z), 
-            na.rm = TRUE)))
-    }
-    else {
-        tmp <- arrayImage(X, Y, log2(pm(dat)[idx, , "channel1"]))
-        sd1 <- unlist(lapply(tmp, function(x) sd(as.vector(x$z), 
-            na.rm = TRUE)))
-        imgs2 <- arrayImage(X, Y, log2(pm(dat)[idx, , "channel2"]))
-        sd2 <- unlist(lapply(imgs2, function(x) sd(as.vector(x$z), 
-            na.rm = TRUE)))
-    }
-    sdRange <- c(0, max(sd1, sd2) * 1.1)
-    if (any(class(pmQual) == "ff")) {
-        pmSignal <- sapply(1:ncol(pmQual), function(i) mean(pmQual[, 
-            i]))
-        names(pmSignal) <- colnames(pmQual)
-    }
-    else {
-        pmSignal <- colMeans(pmQual, na.rm = TRUE)
-    }
-    if (!is.null(file)) {
-        pdf(file = file, width = 8, height = 10.5)
-        lay <- rbind(cbind(rep(1, 3), matrix(rep(2:4, each = 6), 
-            ncol = 6)), rep(5, 7))
-        layout(lay)
-        n <- length(pmSignal)
-        if (is.null(names(pmSignal))) {
-            names(pmSignal) <- paste("Sample", 1:n)
-        }
-        l <- length(pmSignal)
-        longestName <- max(sapply(names(pmSignal), nchar))
-        cexh <- ifelse(n > 50, max(0.25, 1 - (n - 50) * 0.01), 
-            1)
-        cexw <- ifelse(longestName > 17, max(0.25, 1 - (longestName - 
-            15) * 0.05), 1)
-        cex <- min(cexh, cexw)
-        par(oma = c(2, 2, 4, 2))
-        o <- order(names(pmSignal))
-        par(mar = c(5, 0, 3, 0))
-        plot.new()
-        plot.window(xlim = c(0, 10), ylim = c(0, l))
-        text(1, l:1 - 0.5, names(pmSignal)[o], adj = 0.1, cex = cex)
-        abline(h = 1:(l + 1) - 1, lwd = 0.5, lty = 3)
-        xmin <- max(0, floor((min(pmSignal) - 5)/5) * 5)
-        xmax <- min(100, ceiling((max(pmSignal) + 5)/5) * 5)
-        par(mar = c(5, 1, 3, 1))
-        plot(pmSignal[o], l:1, las = 1, ylab = "", xlab = "", 
-            type = "p", pch = 19, xlim = c(xmin, xmax), ylim = c(0.5, 
-                l + 0.5), yaxt = "n", frame.plot = TRUE, main = "Signal strength")
-        abline(h = 1:(l + 1) - 0.5, lwd = 0.5, lty = 3)
-        par(mar = c(5, 1, 3, 1))
-        plot(sd1[o], l:1, las = 1, ylab = "", xlab = "", type = "p", 
-            pch = 19, xlim = sdRange, ylim = c(0.5, l + 0.5), 
-            yaxt = "n", frame.plot = TRUE, main = "Channel 1\nstandard deviation")
-        abline(h = 1:(l + 1) - 0.5, lwd = 0.5, lty = 3)
-        par(mar = c(5, 1, 3, 1))
-        plot(sd2[o], l:1, las = 1, ylab = "", xlab = "", type = "p", 
-            pch = 19, xlim = sdRange, ylim = c(0.5, l + 0.5), 
-            yaxt = "n", frame.plot = TRUE, main = "Channel 2\nstandard deviation")
-        abline(h = 1:(l + 1) - 0.5, lwd = 0.5, lty = 3)
-        hist(pmSignal, main = "Signal strength histogram", xlab = "Signal strength")
-        l <- layout(matrix(c(1, 1, 1, 1, 2:21), 6, 4, byrow = TRUE))
-        plot.new()
-        text(0.5, 0.2, "Untreated Channel: PM probe quality", 
-            cex = 2)
-        par(mar = c(4.5, 8, 3.5, 3))
-        arrayPlot(imgs1[o], r = utRange)
-        l <- layout(matrix(c(1, 1, 1, 1, 2:21), 6, 4, byrow = TRUE))
-        plot.new()
-        text(0.5, 0.2, "Enriched Channel: PM signal intensity", 
-            cex = 2)
-        par(mar = c(4.5, 8, 3.5, 3))
-        arrayPlot(imgs2[o], r = enRange)
-        dev.off()
-    }
-    return(as.data.frame(cbind(pmSignal, sd1, sd2)))
-  }
+	if (require(charmData)) {
+		dataDir <- system.file("data", package="charmData")
+		setwd(dataDir)
+		pd <- read.delim("phenodata.txt")
+		rawData <- readCharm(files=pd$filename, sampleKey=pd)
+		qcReport(rawData, file="qcReport.pdf")
+	}
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

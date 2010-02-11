@@ -7,7 +7,7 @@ Get indices of control probes from CpG-free regions
 Get indices of control probes from CpG-free regions. 
 }
 \usage{
-getControlIndex(dat, controlProbes = c("CONTROL_PROBES", "CONTROL_REGIONS"), noCpGWindow = NULL, subject, onlyGood = FALSE, matrix = TRUE)
+getControlIndex(dat, controlProbes = c("CONTROL_PROBES", "CONTROL_REGIONS"), noCpGWindow = 1000, subject, onlyGood = FALSE, matrix = TRUE)
 }
 \arguments{
   \item{dat}{
@@ -41,12 +41,5 @@ Martin Aryee <aryee@jhu.edu>
 
 
 \examples{
-	if (require(charmData) & require(pd.feinberg.hg18.me.hx1)) {
-		dataDir <- system.file("data", package="charmData")
-		setwd(dataDir)
-		pd <- read.delim("sample_description_file.txt")
-		pd <- subset(pd, Individual=="441" & Tissue_Type=="liver")	
-		rawData <- readCharm(files=pd$Filename, sampleKey=pd)
-		idx <- getControlIndex(rawData)
-	}
+# See dmrFdr
 }

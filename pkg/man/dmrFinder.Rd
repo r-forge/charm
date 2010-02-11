@@ -7,9 +7,8 @@ Find differentially methylated regions (DMRs)
 Find differentially methylated regions (DMRs) from tiling microarray data.
 }
 \usage{
-dmrFinder(eset = NULL, groups, p = NULL, l = NULL, chr = NULL, pos = NULL, pns = NULL, sdBins = NULL, controlIndex = NULL, Indexes = NULL, filter = NULL, package = NULL, ws = 7, verbose = TRUE, compare = "all", bgSubtract = TRUE, withinSampleNorm = "loess", binSize = 500, numSegments = 3, betweenSampleNorm = "quantile", minQCScore = NULL, controlProbes = c("CONTROL_PROBES", "CONTROL_REGIONS"), cluster = NULL, cutoff = 0.995, ...)
+dmrFinder(eset=NULL, groups, p=NULL, l=NULL, chr=NULL, pos=NULL, pns=NULL, sdBins=NULL, controlIndex=NULL, controlProbes=c("CONTROL_PROBES", "CONTROL_REGIONS"), Indexes=NULL, filter=NULL, package=NULL, ws=7, verbose=TRUE, compare="all",  withinSampleNorm="loess", betweenSampleNorm="quantile", cutoff=0.995, sortBy="ttarea",...)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{eset}{
 a TilingFeatureSet
@@ -21,8 +20,7 @@ a vector of group labels for the samples in eset
 a matrix of percentage methylation values (scale: 0, 1). One column per sample
 }
   \item{l}{
-a matrix of methylation values (scale: -Inf, Inf). One column per sample
-}
+a matrix of methylation values (scale: -Inf, Inf), typically log-ratios.}
   \item{chr}{
 vector of chromosome labels for the probes in eset, p or l
 }
@@ -33,10 +31,13 @@ vector of chromosomal coordinates for the probes in eset, p or l
 vector of region names for the probes in eset, p or l
 }
   \item{sdBins}{
-not currently used
+not currently implemented
 }
   \item{controlIndex}{
 vector of indices of non-CpG control probes
+}
+  \item{controlProbes}{
+not currently used
 }
   \item{Indexes}{
 not currently used
@@ -56,52 +57,46 @@ Verbose progress reporting
   \item{compare}{
 the groups between which to find DMRs.
 }
-  \item{bgSubtract}{
-boolean. Remove background signal?
-}
   \item{withinSampleNorm}{
 within-sample normalization method. "loess" or "none"
-}
-  \item{binSize}{
-not currently used
-}
-  \item{numSegments}{
-not currently used
 }
   \item{betweenSampleNorm}{
 between-sample normalization method. "quantile", "sqn" or "none"
 }
-  \item{minQCScore}{
-not currently used
-}
-  \item{controlProbes}{
-not currently used
-}
-  \item{cluster}{
-not currently used
-}
   \item{cutoff}{
-not currently used
+t-statistic cutoff used to identify probes as being in a DMR
+}
+  \item{sortBy}{
+sort column for the DMR table. "area" or "ttarea"
 }
   \item{\dots}{
 further options to be passed to methp
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+This function finds differentially methylated regions (DMRs). The sortby parameter can be used to sort the DMR by area (# probes x length), or t-statistic area (# probes x t-statistic)
 }
 \value{
-a list of the same format as that from \code{\link{dmrFinder}} with the extra columns qval (Q-value) in the tabs slot.
-
+A list with
+\item{tabs}{A list of DMR tables, one per comparison}
+\item{p}{A matrix of percentage methylation estimates (NOTE: the probe order may differ from that of the input p matrix since probes are sorted into chromosomal order)}
+\item{l}{This contains methylation log-ratios if they were passed to the function. Otherwise it contains logit-transformed percentage methylation estimates}
+\item{chr }{a vector of chromosomes corresponding to the rows of p and l}
+\item{pos }{a vector of positions}
+\item{pns }{a vector of probe region names}
+\item{controlIndex }{a vector of control probe indices}
+\item{gm }{Group medians of the l matrix}
+\item{groups }{a vector of group labels}
+\item{args }{the DMR finder parameter vector}
+\item{comps }{the vector of pairwise group comparisons}
+\item{package }{the array annotation package name}
 }
 \author{
-Martin Aryee <aryee@jhu.edu>
+Martin Aryee <aryee@jhu.edu>, Peter Murakami, Rafael Irizarry
 }
-
-
 \seealso{
-\code{\link{dmrFinder}}
+\code{\link{readCharm}}, \code{\link{methp}}, \code{\link{dmrFdr}}
 }
 \examples{
-## See 	\code{\link{dmrFinder}}
+# See dmrFdr
 }

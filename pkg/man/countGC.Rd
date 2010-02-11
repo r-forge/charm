@@ -31,12 +31,12 @@ Martin Aryee <aryee@jhu.edu>
 \code{\link{readCharm}}
 }
 \examples{
-	if (require(charmData) & require(pd.feinberg.hg18.me.hx1)) {
+	if (require(charmData)) {
 		dataDir <- system.file("data", package="charmData")
 		setwd(dataDir)
-		pd <- read.delim("sample_description_file.txt")
-		pd <- subset(pd, Individual=="441" & Tissue_Type=="liver")	
-		rawData <- readCharm(files=pd$Filename, sampleKey=pd)
+		pd <- read.delim("phenodata.txt")
+		pd <- subset(pd, sampleID=="441_liver")
+		rawData <- readCharm(files=pd$filename, sampleKey=pd)
 		ngc <- countGC(rawData)
 		head(ngc)
 	}

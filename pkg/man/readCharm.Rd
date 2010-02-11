@@ -42,7 +42,7 @@ additional options passed on to read.xysfiles2
 This function is a convenience wrapper to read.xysfiles2 to simplify reading in DNA methylation data from the Nimblegen McrBC/CHARM microarray platform. It makes guesses about the extensions used for the methyl-depleted (md) and untreated channels (ut).
 }
 \value{
-A TilingFeatureSet2 object.
+A TilingFeatureSet object.
 }
 \references{
 www.biostat.jhsph.edu/~maryee/charm
@@ -55,11 +55,5 @@ Martin Aryee <aryee@jhu.edu>
 \code{\link{methp}}, \code{\link{dmrFinder}}
 }
 \examples{
-if (require(charmData) & require(pd.feinberg.hg18.me.hx1)) {
-	dataDir <- system.file("data", package="charmData")
-	setwd(dataDir)
-	pd <- read.delim("sample_description_file.txt")
-	pd
-	rawData <- readCharm(files=pd$Filename, sampleKey=pd)
-}
+# See normalizeBetweenSamples
 }

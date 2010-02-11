@@ -1,3 +1,21 @@
+v0.99.0
+Removed deprecated code, including affinityBin, charmCluster, getAffinity, makeSeqX, makeX, addInteractions, debatch
+Exports: Removed pmQuality. Added validatePd
+Imports: Added Biostrings unmasked, DNAString, vcountPattern. Added IRanges Views. Removed spatial. Removed affxparser.
+Major documentation improvements, including vignette
+Corrected rawData in methp to dat
+normalizeWithinSamples: changed controlProbes default to c("CONTROL_PROBES", "CONTROL_REGIONS")
+Added support to scaleSamples for single sample TilingFeatureSets
+Moved unused code from charm.R to deprecated.R
+methp: now passes controlIndex to plotDensity.  Added support for single sample TilingFeatureSets. Modified plotDensityGroups to allow character vectors
+Added getBlockSize
+getControlIndex: Changed default noCpGWindow from NULL to 1000
+dmrFinder: renamed sortby to sortBy. Added sortBy to args. Changed length(eset) to ncol(eset)
+getControlIndex: dropped onlyGood, matrix options. Modified to look for precomputed probes in the annotation file
+dmrFinder: now returns tabs=NULL instead of an error if no DMRs found
+DESCRIPTION Suggests: Added BSgenome.Hsapiens.UCSC.hg18, removed pd.feinberg.hg18.me.hx1
+readCharm: now creates a valid varMetaData object compatible with Bioconductor 2.6
+
 v0.9.33
 dmrFinder changes (Peter Murakami):
 - Changed the way get.tt progress is reported from dots to a progress bar.

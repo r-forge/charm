@@ -1,138 +1,52 @@
 \name{normalizeWithinSamples}
 \alias{normalizeWithinSamples}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-Within-sample (between-channel) normalization for two-color data
+Within-sample normalization for two-color data
 }
 \description{
 Within-sample (between-channel) normalization for two-color DNA methylation microarray data.
 }
 \usage{
-normalizeWithinSamples(dat, method = "loess", controlProbes = "CONTROL_REGIONS", controlIndex = NULL, numSegments = 3, bins = NULL, binSize = 500, approx = TRUE, breaks = 1000, useTot = TRUE, cluster = NULL, verbose = FALSE)
+normalizeWithinSamples(dat, method = "loess", scale=c(0.99, 0.99), controlProbes = c("CONTROL_PROBES", "CONTROL_REGIONS"), controlIndex = NULL, approx=TRUE, breaks=1000, verbose=FALSE)
 }
-%- maybe also 'usage' for other objects documented here.
+
 \arguments{
   \item{dat}{
-%%     ~~Describe \code{dat} here~~
+a TilingFeatureSet
 }
   \item{method}{
-%%     ~~Describe \code{method} here~~
+normalization method. "loess" or "none"
+}
+  \item{scale}{
+a numeric vector (x,y). The xth percentile of each sample is scaled to represent y\% methylation. The default c(0.99, 0.99) means probes in the 99\% percentile represent 99\% methylation. 
 }
   \item{controlProbes}{
-%%     ~~Describe \code{controlProbes} here~~
+character string of the label assigned to non-CpG control probes in the annotation file (i.e. the container column of the .ndf file).
 }
   \item{controlIndex}{
-%%     ~~Describe \code{controlIndex} here~~
-}
-  \item{numSegments}{
-%%     ~~Describe \code{numSegments} here~~
-}
-  \item{bins}{
-%%     ~~Describe \code{bins} here~~
-}
-  \item{binSize}{
-%%     ~~Describe \code{binSize} here~~
+a vector of non-CpG control probe indices
 }
   \item{approx}{
-%%     ~~Describe \code{approx} here~~
+Bin probes by signal intensity when loess normalizing. Much faster when TRUE
 }
   \item{breaks}{
-%%     ~~Describe \code{breaks} here~~
-}
-  \item{useTot}{
-%%     ~~Describe \code{useTot} here~~
-}
-  \item{cluster}{
-%%     ~~Describe \code{cluster} here~~
+Number of bins to use when approx=TRUE
 }
   \item{verbose}{
-%%     ~~Describe \code{verbose} here~~
+boolean: Verbose output?
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+This function is used by \code{\link{methp}} performs within-sample (between-channel) normalization. It is normally not used directly by the user.
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+a TilingFeatureSet
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
+
 \author{
-Martin Aryee <aryee@jhu.edu>
+Martin Aryee <aryee@jhu.edu>, Rafael Irizarry
 }
 
-\note{
-%%  ~~further notes~~
-}
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
-## The function is currently defined as
-function (dat, method = "loess", controlProbes = "CONTROL_REGIONS", 
-    controlIndex = NULL, numSegments = 3, bins = NULL, binSize = 500, 
-    approx = TRUE, breaks = 1000, useTot = TRUE, cluster = NULL, 
-    verbose = FALSE) 
-{
-    if (grepl("gc", method)) {
-        if (class(dat) == "OfflineTilingFeatureSet2") {
-            stop("normalizeWithinSamples does not yet support the method='gc' option for OfflineTilingFeatureSet2 objects. Please use the method='affinity' option.")
-        }
-        mAdj <- diffAmpEstGC(dat, method = method, controlProbes = controlProbes)
-        dat <- diffAmpAdjustGC(dat, mAdj)
-    }
-    if (grepl("loess", method)) {
-        dat <- normalizeLoess(dat, controlIndex = controlIndex, 
-            controlProbes = controlProbes, approx = approx, breaks = breaks, 
-            cluster = cluster)
-    }
-    if (grepl("affinity", method)) {
-        if (is.null(controlIndex)) {
-            controlIndex <- getControlIndex(dat, controlProbes = controlProbes)
-        }
-        if (is.null(bins)) {
-            bins <- affinityBin(dat, controlIndex = controlIndex, 
-                binSize = binSize, useTot = useTot, verbose = verbose)
-        }
-        pms <- pm(dat)
-        for (i in 1:ncol(pms)) {
-            mAdj <- bins$binMed[bins$bin, i]
-            pms[, i, "channel2"] <- 2^(log2(pms[, i, "channel2"]) + 
-                mAdj)
-        }
-        pm(dat) <- pms
-    }
-    if (grepl("median", method)) {
-        if (class(dat) == "OfflineTilingFeatureSet2") {
-            stop("normalizeWithinSamples does not yet support the method='median' option for OfflineTilingFeatureSet2 objects. Please use the method='affinity' option.")
-        }
-        if (is.null(controlIndex)) {
-            controlIndex <- getControlIndex(dat, controlProbes = controlProbes)
-        }
-        datPm <- log2(pm(dat))
-        M <- datPm[, , "channel1"] - datPm[, , "channel2"]
-        mCtrl <- M[controlIndex, ]
-        mAdj <- apply(mCtrl, 2, median, na.rm = TRUE)
-        datPm[, , "channel2"] <- sweep(datPm[, , "channel2"], 
-            2, mAdj, FUN = "+")
-        pm(dat) <- 2^datPm
-    }
-    return(dat)
-  }
+# See normalizeBetweenSamples
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

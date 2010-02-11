@@ -8,140 +8,64 @@ Between-sample normalization
 Between-sample normalization for two-color DNA methylation microarray data.
 }
 \usage{
-normalizeBetweenSamples(dat, m = "allQuantiles", untreated = "none", enriched = "none", mapping = "affinity", numSegments = 3, controlProbes = "CONTROL_REGIONS", controlIndex = NULL, cluster = NULL, verbose = FALSE)
+normalizeBetweenSamples	(dat, m="allQuantiles", untreated="none", enriched="none", controlProbes=c("CONTROL_PROBES", "CONTROL_REGIONS"), controlIndex=NULL, verbose=FALSE)
 }
-%- maybe also 'usage' for other objects documented here.
+
 \arguments{
   \item{dat}{
-%%     ~~Describe \code{dat} here~~
+a TilingFeatureSet object
 }
   \item{m}{
-%%     ~~Describe \code{m} here~~
+normalization method for log-ratios. "allQuantiles" for full quantile normalization, or "none"
 }
   \item{untreated}{
-%%     ~~Describe \code{untreated} here~~
+normalization method for the untreated channel. "complete", "allQuantiles" or "none"
 }
   \item{enriched}{
-%%     ~~Describe \code{enriched} here~~
-}
-  \item{mapping}{
-%%     ~~Describe \code{mapping} here~~
-}
-  \item{numSegments}{
-%%     ~~Describe \code{numSegments} here~~
+normalization method for the untreated channel. "sqn", "allQuantiles" or "none"
+
 }
   \item{controlProbes}{
-%%     ~~Describe \code{controlProbes} here~~
+character string of the label assigned to non-CpG control probes in the annotation file (i.e. the container column of the .ndf file).
 }
   \item{controlIndex}{
-%%     ~~Describe \code{controlIndex} here~~
-}
-  \item{cluster}{
-%%     ~~Describe \code{cluster} here~~
+a vector of non-CpG control probe indices
 }
   \item{verbose}{
-%%     ~~Describe \code{verbose} here~~
+boolean: Verbose output?
 }
+
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+This function is used by \code{\link{methp}} performs between-sample normalization. It is normally not used directly by the user.
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
-}
-\references{
-%% ~put references to the literature/web site here ~
+a TilingFeatureSet
 }
 \author{
 Martin Aryee <aryee@jhu.edu>
 }
 
-\note{
-%%  ~~further notes~~
-}
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{methp}}
 }
-\examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
 
-## The function is currently defined as
-function (dat, m = "allQuantiles", untreated = "none", enriched = "none", 
-    mapping = "affinity", numSegments = 3, controlProbes = "CONTROL_REGIONS", 
-    controlIndex = NULL, cluster = NULL, verbose = FALSE) 
-{
-    pms <- pm(dat)
-    if (class(dat) == "OfflineTilingFeatureSet2") {
-        M <- getPmM(dat)
-    }
-    else {
-        M <- getM(dat)[pmindex(dat), , drop = FALSE]
-    }
-    if (m != "none") {
-        M <- normQuantile(M, method = m)
-        for (i in 1:ncol(M)) {
-            pms[, i, "channel2"] <- 2^(log2(pms[, i, "channel1"]) - 
-                M[, i])
-        }
-    }
-    if (untreated == "complete") {
-        if (any(class(pms) == "ff")) {
-            m <- ffrowapply(rowMedians(log2(pms[i1:i2, , "channel1"]), 
-                na.rm = TRUE), X = pms, RETURN = TRUE, RETCOL = NULL, 
-                BATCHSIZE = 5000)[]
-        }
-        else {
-            m <- rowMedians(log2(pms[, , "channel1"]))
-        }
-        for (i in 1:ncol(pms)) {
-            pms[, i, "channel1"] <- 2^m
-        }
-    }
-    else {
-        pms[, , "channel1"] <- 2^(normQuantile(log2(pms[, , "channel1"]), 
-            method = untreated))
-    }
-    for (i in 1:ncol(M)) {
-        pms[, i, "channel2"] <- 2^(log2(pms[, i, "channel1"]) - 
-            M[, i])
-    }
-    pm(dat) <- pms
-    if (enriched == "sqn") {
-        if (is.null(controlIndex)) 
-            controlIndex <- getControlIndex(dat, controlProbes = controlProbes)
-        if (any(class(pms) == "ff")) {
-            pms <- SQN.ff(pms, channel = 2, ctrl.id = controlIndex, 
-                cluster = cluster)
-        }
-        else {
-            if (is.null(cluster)) {
-                pms[, , "channel2"] <- 2^(SQN(y = log2(pms[, 
-                  , "channel2"]), ctrl.id = controlIndex))
-            }
-            else {
-                pms[, , "channel2"] <- 2^(parSQN(y = log2(pms[, 
-                  , "channel2"]), ctrl.id = controlIndex, cluster = cluster))
-            }
-        }
-    }
-    else {
-        pms[, , "channel2"] <- 2^(normQuantile(log2(pms[, , "channel2"]), 
-            method = enriched))
-    }
-    pm(dat) <- pms
-    return(dat)
-  }
+\examples{
+	if (require(charmData) & require(BSgenome.Hsapiens.UCSC.hg18)) {
+		dataDir <- system.file("data", package="charmData")
+		setwd(dataDir)
+		pd <- read.delim("phenodata.txt")
+		pd <- subset(pd, sampleID=="441_liver")
+		rawData <- readCharm(files=pd$filename, sampleKey=pd)
+		# Correct spatial artifacts
+		dat <- spatialAdjust(rawData)
+		# Remove background signal
+		dat <- bgAdjustBgp(dat)
+		# Find non-CpG control probes
+		ctrlIdx <- getControlIndex(rawData, subject=Hsapiens)
+		# Within-sample normalization
+		dat <- normalizeWithinSamples(dat, controlIndex=ctrlIdx)
+		# Within-sample normalization
+		dat <- normalizeBetweenSamples(dat)
+	}
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

@@ -1,6 +1,5 @@
 \name{methPercent}
 \alias{methPercent}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Estimate percentage DNA methylation from log-ratios
 }
@@ -8,117 +7,43 @@ Estimate percentage DNA methylation from log-ratios
 Estimate percentage DNA methylation from log-ratios
 }
 \usage{
-methPercent(m, ngc, commonParams = TRUE, cluster = NULL)
+methPercent(m, ngc, commonParams = TRUE)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{m}{
-%%     ~~Describe \code{m} here~~
+a matrix of M-values (methylation log-ratios). One column per sample.
 }
   \item{ngc}{
-%%     ~~Describe \code{ngc} here~~
+a vector with GC-content of probes. Same length as nrow(m)
 }
   \item{commonParams}{
-%%     ~~Describe \code{commonParams} here~~
-}
-  \item{cluster}{
-%%     ~~Describe \code{cluster} here~~
+boolean indicating whether a common set of parameters should be used for all samples when converting M-values to percentage methylation.
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+This function estimates percentage DNA methylation from normalized methylation log-ratios (M-values).
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
-}
-\references{
-%% ~put references to the literature/web site here ~
+a matrix of percentage methylation estimates. Same dimensions as m
 }
 \author{
 Martin Aryee <aryee@jhu.edu>
 }
 
-\note{
-%%  ~~further notes~~
-}
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
-## The function is currently defined as
-function (m, ngc, commonParams = TRUE, cluster = NULL) 
-{
-    m <- as.matrix(m)
-    param <- t(sapply(1:ncol(m), function(i) logmethParameters(m[, 
-        i], ngc)))
-    alpha <- unlist(param[, "alpha"])
-    sigma <- unlist(param[, "sigma"])
-    if (commonParams) {
-        alpha[] <- median(alpha)
-        sigma[] <- median(sigma)
-    }
-    if (any(class(m) == "ff")) {
-        cl <- charmCluster(cluster)
-        tmp <- ff(dim = dim(m), vmode = "double", finalizer = "close")
-        parSapply(cl, 1:ncol(m), function(i, m, ngc, alpha, sigma, 
-            tmp) {
-            x <- m[, i]
-            a <- alpha[i]
-            b <- sigma[i]
-            mu <- 0
-            f0 <- dnorm(x, mean = 0, sd = b)
-            f1 <- a * exp(0.5 * a^2 * b^2 - a * x) * (pnorm((x - 
-                a * b^2)/b))
-            p0.prior <- sum(x < 0, na.rm = TRUE)/sum(!is.na(x))
-            p0 <- (p0.prior * f0)/((p0.prior * f0) + ((1 - p0.prior) * 
-                f1))
-            p1 <- 1 - p0
-            x <- x - mu - a * b^2
-            postM <- p1 * (x + b * ((1/sqrt(2 * pi)) * exp((-1/2) * 
-                ((x/b)^2)))/pnorm(x/b))
-            tmp[, i] <- 1 - 2^(-postM)
-            return(NULL)
-        }, m, ngc, alpha, sigma, tmp)
-        ret <- tmp
-        colnames(ret) <- colnames(m)
-        if (all(class(cluster) != "cluster")) 
-            stopCluster(cl)
-    }
-    else {
-        ret <- sapply(1:ncol(m), function(i) {
-            x <- m[, i]
-            a <- alpha[i]
-            b <- sigma[i]
-            mu <- 0
-            f0 <- dnorm(x, mean = 0, sd = b)
-            f1 <- a * exp(0.5 * a^2 * b^2 - a * x) * (pnorm((x - 
-                a * b^2)/b))
-            p0.prior <- sum(x < 0, na.rm = TRUE)/sum(!is.na(x))
-            p0 <- (p0.prior * f0)/((p0.prior * f0) + ((1 - p0.prior) * 
-                f1))
-            p1 <- 1 - p0
-            x <- x - mu - a * b^2
-            postM <- p1 * (x + b * ((1/sqrt(2 * pi)) * exp((-1/2) * 
-                ((x/b)^2)))/pnorm(x/b))
-            1 - 2^(-postM)
-        })
-        colnames(ret) <- colnames(m)
-    }
-    return(ret)
-  }
+	if (require(charmData) & require(BSgenome.Hsapiens.UCSC.hg18)) {
+		dataDir <- system.file("data", package="charmData")
+		setwd(dataDir)
+		# Read in raw data
+		pd <- read.delim("phenodata.txt")
+		pd <- subset(pd, sampleID=="441_liver")
+		rawData <- readCharm(files=pd$filename, sampleKey=pd)
+		# Find non-CpG control probes
+		ctrlIdx <- getControlIndex(rawData, subject=Hsapiens)	
+		# Get normalized methylation log-ratios
+		m <- methp(rawData, controlIndex=ctrlIdx, returnM=TRUE)
+		# Estimate percentage methylation
+		ngc <- countGC(rawData)
+		p <- methPercent(m, ngc)
+	}
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

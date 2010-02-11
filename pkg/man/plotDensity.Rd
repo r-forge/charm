@@ -1,6 +1,5 @@
 \name{plotDensity}
 \alias{plotDensity}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Log-ratio density plot for all probes and control probes
 }
@@ -10,97 +9,46 @@ Make density plots of log-ratios for two-color microarray data. Two plots are pr
 \usage{
 plotDensity(dat, rx = c(-4, 6), controlIndex = NULL, pdfFile = NULL, main = NULL, cols = NULL, lwd = NULL)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{
-%%     ~~Describe \code{dat} here~~
+a TilingFeatureSet
 }
   \item{rx}{
-%%     ~~Describe \code{rx} here~~
+x-axis range
 }
   \item{controlIndex}{
-%%     ~~Describe \code{controlIndex} here~~
+a vector of non-CpG control probe indices
 }
   \item{pdfFile}{
-%%     ~~Describe \code{pdfFile} here~~
+name of output pdf file
 }
   \item{main}{
-%%     ~~Describe \code{main} here~~
+main title 
 }
   \item{cols}{
-%%     ~~Describe \code{cols} here~~
+vector of colors, one per sample
 }
   \item{lwd}{
-%%     ~~Describe \code{lwd} here~~
+vector of line widths, one per sample
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+This function makes density plots for a) all probes and b) control probes. It is typically called from within methp when a file name is specified for its plotDensity option. The plots are useful for identifying problematic outlier samples.
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
-}
-\references{
-%% ~put references to the literature/web site here ~
+No return value. Called for its side-effect of producing a pdf plot.
 }
 \author{
 Martin Aryee <aryee@jhu.edu>
 }
 
-\note{
-%%  ~~further notes~~
-}
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
-## The function is currently defined as
-function (dat, rx = c(-4, 6), controlIndex = NULL, pdfFile = NULL, 
-    main = NULL, cols = NULL, lwd = NULL) 
-{
-    if (!is.null(pdfFile)) {
-        pdf(pdfFile)
-        par(mfcol = c(2, 1))
-    }
-    if (any(class(dat) == "OfflineTilingFeatureSet2")) {
-        M <- getPmM(dat)
-        lab <- sampleNames(dat)
-    }
-    else if (any(class(dat) == "TilingFeatureSet2")) {
-        M <- getM(dat)[pmindex(dat), , drop = FALSE]
-        lab <- sampleNames(dat)
-    }
-    else {
-        M <- dat[, ]
-        lab <- colnames(dat)
-    }
-    if (is.null(cols)) 
-        cols <- 1:ncol(M)
-    if (is.null(lwd)) 
-        lwd <- rep(1, ncol(M))
-    if (is.null(controlIndex)) 
-        controlIndex <- getControlIndex(dat)
-    plotDensityMat(M[, ], xlab = "M", lab = lab, main = paste(main, 
-        "\nAll probes"), rx = rx, cols = cols, lwd = lwd)
-    plotDensityMat(M[controlIndex, ], xlab = "M", lab = lab, 
-        main = paste(main, "\nControl probes"), rx = rx, cols = cols, 
-        lwd = lwd)
-    if (!is.null(pdfFile)) 
-        dev.off()
-  }
+	if (require(charmData) & require(BSgenome.Hsapiens.UCSC.hg18)) {
+		dataDir <- system.file("data", package="charmData")
+		# Read in raw data
+		pd <- read.delim(file.path(dataDir, "phenodata.txt"))
+		rawData <- readCharm(path=dataDir, files=pd$filename, sampleKey=pd)
+		ctrlIdx <- getControlIndex(rawData, subject=Hsapiens)
+		plotDensity(rawData, controlIndex=ctrlIdx, pdfFile="density.pdf")	
+	}
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
