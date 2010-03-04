@@ -7,7 +7,8 @@ Read in McrBC/CHARM DNA methylation microarray data
 Read in DNA methylation microarray data from the McrBC/CHARM platform
 }
 \usage{
-readCharm(files, path = ".", ut = "_532.xys", md = "_635.xys", sampleKey, sampleNames = NULL, pkgname, type = NULL, ...)
+readCharm(files, path = ".", ut = "_532.xys", md = "_635.xys", 
+	sampleKey, sampleNames = NULL, pkgname, type = NULL, ...)
 }
 \arguments{
   \item{files}{

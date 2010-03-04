@@ -7,7 +7,8 @@ Log-ratio density plot for all probes and control probes
 Make density plots of log-ratios for two-color microarray data. Two plots are produced: one for all probes on the array, and a second for the control probes.
 }
 \usage{
-plotDensity(dat, rx = c(-4, 6), controlIndex = NULL, pdfFile = NULL, main = NULL, cols = NULL, lwd = NULL)
+plotDensity(dat, rx = c(-4, 6), controlIndex = NULL, pdfFile = NULL, 
+	main = NULL, cols = NULL, lwd = NULL)
 }
 \arguments{
   \item{dat}{

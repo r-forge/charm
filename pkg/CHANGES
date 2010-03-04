@@ -1,3 +1,14 @@
+v0.99.3
+Incorporated Bioconductor package review comments
+
+v0.99.1
+dmrFinder: named the sdBins component of args
+validatePd: when guessing group column now excludes those with a common value for all samples. now returns a status code.
+methp, plotDensity, plotDensityMat: legend uses plotDensityGroups
+dmrFinder: made cutoff a vector, extra parameter validity check (Peter Murakami)
+dmrFdr: now allow missing data in p or l. now returns numPerms
+Documentation improvements
+
 v0.99.0
 Removed deprecated code, including affinityBin, charmCluster, getAffinity, makeSeqX, makeX, addInteractions, debatch
 Exports: Removed pmQuality. Added validatePd

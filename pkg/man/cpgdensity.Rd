@@ -1,6 +1,5 @@
 \name{cpgdensity}
 \alias{cpgdensity}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Get CpG density for genomic regions
 }
@@ -8,7 +7,8 @@ Get CpG density for genomic regions
 Calculate the CpG density for a set of windows
 }
 \usage{
-cpgdensity(subject, chr, pos, windowSize = 500, sequence = "CG", showProgress = FALSE)
+cpgdensity(subject, chr, pos, windowSize = 500, sequence = "CG", 
+	showProgress = FALSE)
 }
 \arguments{
   \item{subject}{
@@ -30,7 +30,7 @@ boolean
 }
 }
 \details{
-Calculate the CpG density for a set of regions. chr and pos specify the region mid-points and windowSize specifies the size of the window to be centered on these mid-points. i.e. The window will stretch from pos-windowSize/2 to pos+windowSize/2
+Calculate the CpG density for a set of regions. chr and pos specify the region mid-points and windowSize specifies the size of the window to be centered on these mid-points. i.e. The window will stretch from pos-windowSize/2 to pos+windowSize/2.
 }
 \value{
 a numeric vector 

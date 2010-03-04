@@ -15,16 +15,8 @@ methp <- function(dat, spatial=TRUE, bgSubtract=TRUE,
 		pdf(file=plotDensity, height=11, width=8)
 		par(mfrow=c(5,2), mar=c(2,2,4,2))
 		lwd <- rep(1, ncol(dat))
-		if (is.null(plotDensityGroups)) {
-			if (!is.null(pData(dat)$type)){
-				cols <- as.numeric(factor(pData(dat)$type))
-			} else {
-				cols <- rep(1, ncol(dat))
-			}
-		} else {
-			cols <- as.numeric(as.factor(plotDensityGroups))
-		}
-		plotDensity(dat, main="1. Raw", cols=cols, lwd=lwd, controlIndex=controlIndex)
+		plotDensity(dat, main="1. Raw", lab=plotDensityGroups, 
+		 	controlIndex=controlIndex)
 	}
 	
 	if (is.list(betweenSampleNorm)) {
@@ -45,35 +37,36 @@ methp <- function(dat, spatial=TRUE, bgSubtract=TRUE,
 	}	
     # Spatial bias correction
     if (spatial) {
-        if (verbose) cat("Spatial normalization\n")
+        if (verbose) message("Spatial normalization")
        	dat <- spatialAdjust(dat)
     }
     # Background removal
 	if (bgSubtract) {
-    	if (verbose) cat("Background removal\n")
+    	if (verbose) message("Background removal")
 		dat <- bgAdjustBgp(dat)
 	}
 	if(!is.null(plotDensity)) {
-		plotDensity(dat, main="2. After spatial & bg", cols=cols, lwd=lwd, controlIndex=controlIndex)
+		plotDensity(dat, main="2. After spatial & bg", lab=plotDensityGroups, controlIndex=controlIndex)
 	}	
 	# Within sample normalization
 	if (is.null(controlIndex)) {
 		controlIndex <- getControlIndex(dat, controlProbes=controlProbes)
 	}
-	if (verbose) cat("Within sample normalization: ", withinSampleNorm, "\n", sep="") 
+	if (verbose) message("Within sample normalization: ", withinSampleNorm) 
 	dat <- normalizeWithinSamples(dat, method=withinSampleNorm,
 		scale=scale, controlIndex=controlIndex, verbose=verbose)
 	if(!is.null(plotDensity)) {
-		plotDensity(dat, main="3. After within-sample norm", cols=cols, lwd=lwd, controlIndex=controlIndex)
+		plotDensity(dat, main="3. After within-sample norm", 
+			lab=plotDensityGroups, controlIndex=controlIndex)
 	}
     # Between sample normalization    
 	if (verbose) {
-		cat("Between sample normalization")
+		message("Between sample normalization", appendLF=FALSE)
 		if (is.list(betweenSampleNorm)) {
-			cat(". M: ", bs$m, ", Untreated channel: ", bs$untreated, 
-		        ", Methyl-depleted channel: ", bs$enriched, "\n", sep="")
+			message(". M: ", bs$m, ", Untreated channel: ", bs$untreated, 
+		        ", Methyl-depleted channel: ", bs$enriched)
 		} else {
-			cat (": ", betweenSampleNorm, "\n", sep="")
+			message (": ", betweenSampleNorm)
 		}
 	}	
     dat <- normalizeBetweenSamples(dat, m=bs$m, 
@@ -83,7 +76,8 @@ methp <- function(dat, spatial=TRUE, bgSubtract=TRUE,
 	M <- getM(dat)[pmindex(dat),,drop=FALSE]
 
 	if(!is.null(plotDensity)) {
-		plotDensity(dat, main="4. After between-sample norm", cols=cols, lwd=lwd, controlIndex=controlIndex)
+		plotDensity(dat, main="4. After between-sample norm",
+		 lab=plotDensityGroups, controlIndex=controlIndex)
 	}		
 	
 	if (returnM=="TRUE" | returnM=="+") {
@@ -91,13 +85,13 @@ methp <- function(dat, spatial=TRUE, bgSubtract=TRUE,
 	} else if (returnM=="-") {
 		retval <- -M
 	} else {
-	    if (verbose) cat("Estimating percentage methylation\n")
+	    if (verbose) message("Estimating percentage methylation")
      	retval <- methPercent(m=M, commonParams=commonMethPercentParams,
 	 		ngc=countGC(dat))
 	}
 	if(!is.null(plotDensity)) {
 		if (is.null(controlIndex)) controlIndex <- getControlIndex(dat)
-		if(returnM=="FALSE") plotDensity(retval, main="5. Percentage methylation", rx=c(0,1), cols=cols, lwd=lwd, controlIndex=controlIndex)
+		if(returnM=="FALSE") plotDensity(retval, main="5. Percentage methylation", rx=c(0,1), lab=plotDensityGroups, controlIndex=controlIndex)
 		dev.off()		
 	}
     return(retval)
@@ -139,12 +133,12 @@ readCharm <- function(files, path=".", ut="_532.xys", md="_635.xys",
     filesUt <- files[utIdx]
     filesMd <- files[mdIdx]
     if (!all(sub(ut, "", filesUt) == sub(md, "", filesMd))) 
-        stop(cat("The untreated (ut) and methyl-depleted (md) file names don't match up\n"))
+        stop(("The untreated (ut) and methyl-depleted (md) file names don't match up\n"))
     if (!is.null(sampleNames)) {
         sampleCheck <- sampleNames[utIdx] == sampleNames[mdIdx]
         if (!all(sampleCheck)) 
-            stop(cat("The untreated (ut) and methyl-depleted (md) sample names don't match up\n Check:", 
-                sampleNames[utIdx][!sampleCheck], "\n"))
+            stop("The untreated (ut) and methyl-depleted (md) sample names don't match up\n Check:", 
+                sampleNames[utIdx][!sampleCheck])
         sampleNames <- sampleNames[utIdx]
     } else {
         sampleNames <- sub(ut, "", filesUt)
@@ -194,7 +188,7 @@ readCharm <- function(files, path=".", ut="_532.xys", md="_635.xys",
 
 
 plotDensity <- function(dat, rx=c(-4,6), controlIndex=NULL, 
-		pdfFile=NULL, main=NULL, cols=NULL, lwd=NULL) {
+		pdfFile=NULL, main=NULL, lab=NULL) {
 	if (!is.null(pdfFile)) {
 		pdf(pdfFile)
 		par(mfcol=c(2,1))
@@ -202,19 +196,16 @@ plotDensity <- function(dat, rx=c(-4,6), controlIndex=NULL,
 	if (any(class(dat)=="TilingFeatureSet2") |
 	 		any(class(dat)=="TilingFeatureSet")) {
 		M <- getM(dat)[pmindex(dat),,drop=FALSE]
-		lab <- sampleNames(dat)
+		if (is.null(lab)) lab <- sampleNames(dat)
 	} else {
 		M <- dat
-		lab <- colnames(dat)
+		if (is.null(lab)) lab <- colnames(dat)		
 	}
-	if (is.null(cols)) cols <- 1:ncol(M)
-	if (is.null(lwd)) lwd <- rep(1, ncol(M))
-	
 	if (is.null(controlIndex)) controlIndex <- getControlIndex(dat)
 	plotDensityMat(M, xlab="M", lab=lab, 
-		main=paste(main,"\nAll probes"), rx=rx, cols=cols, lwd=lwd)
+		main=paste(main,"\nAll probes"), rx=rx)
 	plotDensityMat(M[controlIndex,,drop=FALSE], xlab="M", lab=lab, 
-		main=paste(main, "\nControl probes"), rx=rx, cols=cols, lwd=lwd)
+		main=paste(main, "\nControl probes"), rx=rx)
 	if (!is.null(pdfFile)) dev.off()
 }
 
@@ -382,11 +373,11 @@ normControlBg <- function(pms, bgs=NULL, controlIndex=NULL, affinity=NULL) {
         ctrl <- pms[controlIndex,]
         mCtrl <- rowMedians(ctrl)
     }
-    cat(" Normalizing with", length(c(mBg, mCtrl)), "control probes ")
+    message(" Normalizing with", length(c(mBg, mCtrl)), "control probes ", appendLF=FALSE)
     if (!is.null(affinity)) {
-        cat("(affinity-based mapping)\n")
+        message("(affinity-based mapping)")
     } else {
-        cat("(intensity-based mapping)\n")
+        message("(intensity-based mapping)")
     }
   
     for (i in 1:ncol(pms)) {
@@ -521,12 +512,11 @@ countGC <- function(dat, type="pm") {
     bc[,"C"] + bc[,"G"]
 }
 
-cpgdensity <-function(subject, chr, pos, windowSize=500, sequence="CG", showProgress=FALSE) {
+cpgdensity <-function(subject, chr, pos, windowSize=500, sequence="CG") {
     idx <- split(1:length(chr), chr)
     s <- DNAString(sequence) 
     cpgdensity <- rep(NA, length(pos))
     for (curchr in (names(idx))) {
-            if (showProgress) cat(".")
             if (curchr %in% names(subject)) {
                 chrseq <- subject[[curchr]]
                 curpos <- pos[idx[[curchr]]]
@@ -536,7 +526,6 @@ cpgdensity <-function(subject, chr, pos, windowSize=500, sequence="CG", showProg
                 cpgdensity[idx[[curchr]]] <- numcpg/windowSize       
             }
     }
-    if (showProgress) cat("\n")
     cpgdensity
 }
 
@@ -705,14 +694,17 @@ arrayPlot <- function(imgs, xlab="NULL", r=NULL) {
     }
 }
 
-plotDensityMat <- function(x, cols=rep(1:5, 2), 
-        lwd=rep(1:4, each=5), main=NULL, ylab="Density", xlab="p", lab=NULL,rx=NULL,ry=NULL,legendPos="topright") {
-    d <- apply(x, 2, density, na.rm=TRUE)
+plotDensityMat <- function (x, main = NULL, 
+    ylab = "Density", xlab = "M", lab = NULL, rx = NULL, ry = NULL, 
+    legendPos = "topright", cex=0.8) {
+	lab <- as.factor(lab)
+    d <- apply(x, 2, density, na.rm = TRUE)
     if (is.null(rx)) rx <- range(sapply(d, function(i) i$x))
     if (is.null(ry)) ry <- range(sapply(d, function(i) i$y))
-    plot(rx, ry, type = "n", xlab = xlab, ylab = ylab, main=main)
-    sapply(1:length(d), function(i) lines(d[[i]], col=cols[i], lwd=lwd[i]))
-    legend(legendPos, legend=lab, col=cols, lwd=lwd, cex=0.6)    
+    plot(rx, ry, type = "n", xlab = xlab, ylab = ylab, main = main)
+    sapply(1:length(d), function(i) lines(d[[i]], col = lab[i]))
+    legend(legendPos, legend = levels(lab), 
+		text.col = 1:length(levels(lab)), cex = cex)
 }
 
 ## fn(pm) where fn is the ECDF of bg
@@ -724,7 +716,6 @@ pmQuality <- function(dat, channel="channel1", verbose=FALSE, idx=NULL) {
 	pms <- pm(dat)[idx,,,drop=FALSE]
 	bgs <- bg(dat)
 	pmq <- sapply(1:ncol(pms), function(i) {
-	    if (verbose) cat(".")
 	    fn <- tapply(bgs[,i,channel], bgNgc, ecdf)
 	    ret <- rep(NA, length(Ngc))
 		for (ngc in unique(Ngc)) {
@@ -740,7 +731,7 @@ pmQuality <- function(dat, channel="channel1", verbose=FALSE, idx=NULL) {
 }
 
 pmvsbg <- function(...) {
-	cat("The pmvsbg function has been renamed pmQuality. Both names work for now but please update your code soon\n")
+	message("The pmvsbg function has been renamed pmQuality. Both names work for now but please update your code soon")
 	pmQuality(...)
 }
 
@@ -750,7 +741,6 @@ dynamicRange <- function(dat, prob=0.8) {
     c1 <- log2(oligo::pm(dat)[,,"channel1"])
     c2 <- log2(oligo::bg(dat)[,,"channel2"])    
     sapply(sampleNames(dat), function(i) {
-            cat(".")
             tmp <- tapply(c2[,i], bgNgc, quantile, prob)
             c2med <- rep(NA, max(as.numeric(names(tmp))))
             c2med[as.numeric(names(tmp))] <- tmp
@@ -1062,7 +1052,7 @@ smoothTile <- function(mat,pns,filter=NULL,ws=3,verbose=TRUE,...){
   ##this function assumes genome position of mat[Indexes[[1]] are ordered
   Indexes=split(seq(along=pns),pns)
   for(i in seq(along=Indexes)){
-    if(verbose) if(i%%1000==0) cat(i,",")
+    #if(verbose) if(i%%1000==0) cat(i,",")
     Index=Indexes[[i]]
     for(j in 1:ncol(mat)){
       mat[Index,j] <- myfilter(mat[Index,j],filter)
@@ -1097,15 +1087,15 @@ get.tog <- function(l,groups,compare,verbose){
   ls=matrix(0,nrow(l),ng)
   ns=sapply(gIndex,length)
   
-  if(verbose) cat("Computing group medians and SDs for",ng,"groups:")
+  if(verbose) message("Computing group medians and SDs for",ng,"groups:")
   for(i in seq(along=gIndex)){
-    if(verbose) cat("\n",i)
+    if(verbose) message("\n",i)
     Index=gIndex[[i]]
     if(length(Index)>1){
         lm[,i]=rowMedians(l[,Index,drop=FALSE])
         ls[,i]=rowMads(l[,Index,drop=FALSE],center=lm[,i])
     } else{
-        cat(paste(" ",names(gIndex)[i],"has only 1 array!"))
+        message(paste(" ",names(gIndex)[i],"has only 1 array!"))
         lm[,i]=l[,Index,drop=FALSE]
         ls[,i]=NA
     }
@@ -1116,7 +1106,7 @@ get.tog <- function(l,groups,compare,verbose){
   nums  <- match(compare,colnames(lm))
   COMPS <- matrix(nums,ncol=2,byrow=TRUE)
   
-  if(verbose) cat("\nDone.\n")
+  if(verbose) message("\nDone.\n")
   return(list(lm=lm,ls=ls,ns=ns,COMPS=COMPS))
 }
 
@@ -1128,7 +1118,7 @@ get.tt <- function(lm,ls,ns,filter,Indexes,COMPS,ws,verbose){
   }
   if(!isTRUE(all.equal(sum(filter),1))) stop("filter must sum to 1.")
   
-  if(verbose) cat("Smoothing:\n")
+  if(verbose) message("Smoothing:\n")
   dm=matrix(0,nrow(lm),nrow(COMPS))
   cnames = vector("character",nrow(COMPS))
   for(r in 1:ncol(dm)) cnames[r]=paste(colnames(lm)[COMPS[r,]],collapse="-")
@@ -1157,7 +1147,7 @@ get.tt <- function(lm,ls,ns,filter,Indexes,COMPS,ws,verbose){
   }
   if(verbose) close(pb)
   for(r in 1:nrow(COMPS)) tt[,r] = sdm[,r]/svr[,r]
-  if(verbose) cat("Done.\n")
+  if(verbose) message("Done.")
   return(tt)
 }
 
@@ -1167,9 +1157,11 @@ dmrFinder <- function(eset=NULL, groups, p=NULL, l=NULL, chr=NULL, pos=NULL, pns
   groups = as.character(groups)
   if(identical(compare,"all")) compare=comp(groups)
   if(length(compare)%%2!=0) stop("compare must have an even number of elements.")
+  if(length(cutoff)==1) cutoff <- rep(cutoff, length(compare)/2)
+  if(length(compare)/2!=length(cutoff)) stop(length(compare)/2," comparisons requested but ", length(cutoff)," cutoff(s) provided.")
 
   args=list(filter=filter, ws=ws, betweenSampleNorm=betweenSampleNorm, 
-	    withinSampleNorm=withinSampleNorm, sdBins,
+	    withinSampleNorm=withinSampleNorm, sdBins=sdBins,
             controlProbes=controlProbes, cutoff=cutoff, sortBy=sortBy)
 
   # dmrFinder must be given either eset or p/l,chr,pos,pns, and controlIndex
@@ -1196,6 +1188,7 @@ dmrFinder <- function(eset=NULL, groups, p=NULL, l=NULL, chr=NULL, pos=NULL, pns
       if(!is.null(p)) p=p[index,]
       if(!is.null(l)) l=l[index,]
   } else if (is.character(eset)) {
+          if (is.null("p") & is.null("l")) stop("p or l must be supplied.")
 	  pdInfo=get(eset)
 	  class(pdInfo)="TilingFeatureSet" # Trick oligo so that pmChr, pmPosition, probeNames work
 	  chr=pmChr(pdInfo)
@@ -1276,24 +1269,24 @@ dmrFinder <- function(eset=NULL, groups, p=NULL, l=NULL, chr=NULL, pos=NULL, pns
 
   res=vector("list",ncol(tt))
   names(res)=colnames(tt)
-  if(verbose) cat("Finding DMRs for each pairwise comparison.")
+  if(verbose) message("Finding DMRs for each pairwise comparison.")
   for(r in 1:nrow(COMPS)){
       j = COMPS[r,1]
       k = COMPS[r,2]
-      if(verbose) cat("\n",colnames(tt)[r])
+      if(verbose) message("\n",colnames(tt)[r])
       DF=ifelse(ns[j]==1 & ns[k]==1, 1, ns[j]+ns[k]-2)
 	
 	  if (length(sdBins)==0) {
-	      K=mad(tt[,r], na.rm=TRUE)*qt(cutoff,DF)	
+	      K=mad(tt[,r], na.rm=TRUE)*qt(cutoff[r],DF)	
 	  }	else {
 		  s <- tapply(tt[,r], sdBins, mad, na.rm=TRUE)
-		  K=s[sdBins]*qt(cutoff,DF)	
+		  K=s[sdBins]*qt(cutoff[r],DF)	
 	  }
       LAST=0
       segmentation=vector("numeric",nrow(tt))
       type=vector("numeric",nrow(tt))
       for(i in seq(along=Indexes)){
-        if(verbose) if(i%%1000==0) cat(".")
+        if(verbose) if(i%%1000==0) message(".", appendLF=FALSE)
         Index=Indexes[[i]]
         y=tt[Index,r]
 		if(length(sdBins)==0) {
@@ -1339,7 +1332,7 @@ dmrFinder <- function(eset=NULL, groups, p=NULL, l=NULL, chr=NULL, pos=NULL, pns
       if(sortBy=="ttarea") res[[r]]=res[[r]][order(-ttarea),]
 
   }
-  if(verbose) cat("\nDone\n")
+  if(verbose) message("\nDone")
   return(list(tabs=res, p=p, l=l, chr=chr, pos=pos, pns=pns, 
               index=index, controlIndex=controlIndex, gm=lm,
               groups=groups, args=args, comps=COMPS, package=package))
@@ -1349,20 +1342,28 @@ dmrFdr <- function(dmr, compare=1, numPerms=1000, seed=NULL, verbose=TRUE) {
 	if (length(compare)!=1) stop("You must choose one comparison at a time when calculating FDRs. Please set dmr to be one of: ", 
 	paste(names(dmr$tabs), collapse=", "), "\n")
 	if (is.numeric(compare)) compare <- names(dmr$tabs)[compare]
-	cat("Calculating q-values for DMRs between", compare, "\n")
+	message("Calculating q-values for DMRs between", compare, "\n")
 	# Get probe order from TilingFeatureSet object
 	pdInfo=get(dmr$package)
 	class(pdInfo)="TilingFeatureSet" # Trick oligo so that pmChr, pmPosition work
 	chr=pmChr(pdInfo)
 	pos=pmPosition(pdInfo)
+	chrpos <- paste(chr, pos)
+	dchrpos <- paste(dmr$chr, dmr$pos)
+	#idx <- which(!(chrpos %in% dchrpos))
+	mis <- setdiff(chrpos, dchrpos)
 	o <- order(chr, pos)
+	chrpos <- chrpos[o]
+	keepProbes <- !(chrpos %in% mis)
+	o <- o[keepProbes]
 	keep <- dmr$groups %in% unlist(strsplit(compare, "-"))
+	# Recreate p or l with same sort order as in annotation package 
 	if (is.null(dmr$p)) {
-		l <- matrix(NA, nrow=nrow(dmr$l), ncol=ncol(dmr$l))
+		l <- matrix(NA, nrow=length(pos), ncol=ncol(dmr$l))
 		l[o,] <- dmr$l
 		l <- l[,keep]
 	} else {
-		p <- matrix(NA, nrow=nrow(dmr$p), ncol=ncol(dmr$p))
+		p <- matrix(NA, nrow=length(pos), ncol=ncol(dmr$p))
 		p[o,] <- dmr$p
 		p <- p[,keep]
 	}
@@ -1371,7 +1372,7 @@ dmrFdr <- function(dmr, compare=1, numPerms=1000, seed=NULL, verbose=TRUE) {
 	maxPerms <- choose(n, n1)
 	if (numPerms=="all") numPerms <- maxPerms
 	if (numPerms>maxPerms) {
-		cat("Given the sample sizes in the two groups the maximum number of permutations is ", maxPerms, ".\n", sep="")
+		message("Given the sample sizes in the two groups the maximum number of permutations is ", maxPerms, sep="")
 		numPerms <- maxPerms
 	} 
 
@@ -1380,7 +1381,7 @@ dmrFdr <- function(dmr, compare=1, numPerms=1000, seed=NULL, verbose=TRUE) {
 	s <- sample(1:maxPerms, numPerms)
 	grp1 <- combinations(n,n1)[s,]
 
-	if (verbose) cat("Finding permuted data DMRs. Estimating time remaining\n")
+	if (verbose) message("Finding permuted data DMRs. Estimating time remaining")
 	areas <- lapply(1:numPerms, function(i) {
 		groups <- rep("grp2", n)
 		groups[grp1[i,]] <- "grp1"
@@ -1396,8 +1397,8 @@ dmrFdr <- function(dmr, compare=1, numPerms=1000, seed=NULL, verbose=TRUE) {
 				verbose=FALSE))[3]
 		}
 		if (verbose & (i %in% round(seq(1, numPerms, length.out=10)))) {
-			cat(i, "/", numPerms, " (", prettyTime((numPerms-i)*st), 
-				" remaining)\n", sep="")
+			message(i, "/", numPerms, " (", prettyTime((numPerms-i)*st), 
+				" remaining)", sep="")
 		}
 		dmrPerm$tabs[[1]][,dmr$args$sortBy]
 	})
@@ -1408,6 +1409,11 @@ dmrFdr <- function(dmr, compare=1, numPerms=1000, seed=NULL, verbose=TRUE) {
 	pi0<-pi0.est(pval)$p0
 	qval<-qvalue.cal(pval, pi0)
 	dmr$tabs[[compare]] <- cbind(dmr$tabs[[compare]], pval, qval)
+	if (!("numPerms" %in% names(dmr))) {
+		dmr$numPerms <- rep(NA, length(dmr$tabs))
+		names(dmr$numPerms) <- names(dmr$tabs)
+	}
+	dmr$numPerms[compare] <- numPerms
 	return(dmr)
 }
 
@@ -1427,14 +1433,14 @@ prettyTime <- function(seconds) {
 validatePd <- function(pd, fileNameColumn, sampleNameColumn, 
 		groupColumn, ut = "_532.xys", md = "_635.xys") {
 	msg <- ""
-	cat("Filenames:\n")
+	message("Filenames:")
 	if (missing(fileNameColumn)) {
 		fileNameColumn <- which.max(apply(pd, 2, function(col) {
 			u <- grep(ut, col, ignore.case=TRUE)
 			m <- grep(md, col, ignore.case=TRUE)
 			length(c(u,m))
 		}))
-		cat("  fileNameColumn not specified. Trying to guess.\n")	
+		message("  fileNameColumn not specified. Trying to guess.\n")	
 	}
 	files <- pd[,fileNameColumn]
 	o <- order(files)
@@ -1442,11 +1448,11 @@ validatePd <- function(pd, fileNameColumn, sampleNameColumn,
 	pd <- pd[o,]
 	utIdx <- grep(ut, files)
 	if (length(utIdx)==0) {
-		msg <- paste(msg, "  No files in column", fileNameColumn, "match the untreated extension ", ut, ". Please use the ut option to set the correct extension\n")
+		msg <- paste(msg, "  No files in column ", fileNameColumn, " match the untreated extension ", ut, ". Please use the ut option to set the correct extension\n", sep="")
 	}
 	mdIdx <- grep(md, files)
 	if (length(mdIdx)==0) {
-		msg <- paste(msg, "  No files in column", fileNameColumn, "match the methyl-depleted extension ", md, ". Please use the md option to set the correct extension\n")
+		msg <- paste(msg, "  No files in column ", fileNameColumn, " match the methyl-depleted extension ", md, ". Please use the md option to set the correct extension\n", sep="")
 	}
 	filesUt <- sub(ut, "", files[utIdx])
 	filesMd <- sub(md, "", files[mdIdx])
@@ -1455,72 +1461,74 @@ validatePd <- function(pd, fileNameColumn, sampleNameColumn,
 		msg <- paste(msg, "  The untreated (ut) and methyl-depleted (md) file names in column ", fileNameColumn, " don't match up. Check ", paste(missing, collapse=", "), sep="")
 	}
 	if (length(missing)>0 | length(utIdx)==0 | length(mdIdx)==0) {
-		cat("  ERROR - ", msg, "\n")
-		return(FALSE)	
+		message("  ERROR - ", msg)
+		return(list(status="ERROR", message=msg))	
 	} else {
-		cat("  OK - Found in column", fileNameColumn, "\n")
+		message("  OK - Found in column", fileNameColumn)
 	}
 
 	channelMatch <- apply(pd[utIdx,]==pd[mdIdx,], 2, all)
-	onePerSample <- apply(pd[utIdx,], 2, function(x) length(unique(x)))==length(utIdx)
+	numUnique <- apply(pd[utIdx,], 2, function(x) length(unique(x)))
+	onePerSample <- numUnique==length(utIdx)
 
-	cat("Sample names:\n")
+	message("Sample names:")
 	if (missing(sampleNameColumn)) {
-		cat("  sampleNameColumn column not specified. Trying to guess.\n")	
+		message("  sampleNameColumn column not specified. Trying to guess.")	
 		sampleNameColumn <- which(channelMatch & onePerSample)	
 		if (length(sampleNameColumn)==1) {
-			cat("  OK - Found in column", sampleNameColumn, "\n")
+			message("  OK - Found in column", sampleNameColumn)
 		} else if (length(sampleNameColumn)==0) {
-			cat("  ERROR - No suitable sample ID column found. This column should have the same entry for each pair of untreated and methyl-depleted filenames.\n")
-			return(FALSE)
+			msg <- paste(msg, "No suitable sample ID column found. This column should have the same entry for each pair of untreated and methyl-depleted filenames.\n")
+			message("  ERROR - ", msg, appendLF=FALSE )
+			return(list(status="ERROR", message=msg))
 		} else if (length(sampleNameColumn)>1) {
-			cat("  WARNING - Multiple columns (", paste(sampleNameColumn, collapse=", "), 
-				") are candidates for sample ID. Arbitrarily choosing column ", 
-				sampleNameColumn[1], ".\n", sep="")
+			message("  WARNING - Multiple columns (", paste(sampleNameColumn, collapse=", "), 
+				") are candidates for sample ID.", sep="")
 				sampleNameColumn <- sampleNameColumn[1]
 		}
 	} else { # User specified sampleNameColumn
 		if (channelMatch[sampleNameColumn] & onePerSample[sampleNameColumn]) {
-			cat("  OK - Found in column", sampleNameColumn, "\n")
+			message("  OK - Found in column", sampleNameColumn)
 		} else {
 			if (!channelMatch[sampleNameColumn]) {
 				msg <- paste(msg, "  There are samples with different values in column ", sampleNameColumn, " for their untreated and methyl-depleted rows\n", sep="")
 			} else if (!onePerSample[sampleNameColumn]) {
 				msg <- paste(msg, "  The sample IDs in column ", sampleNameColumn, " are not unique to each sample\n", sep="")
 			}
-			cat("  ERROR -", msg, "\n")
-			return(FALSE)
+			message("  ERROR -", msg)
+			return(list(status="ERROR", message=msg))	
 		}
 	}
-	cat("Group labels:\n")
+	message("Group labels:")
 	if (missing(groupColumn)) {
-		cat("  groupColumn column not specified. Trying to guess.\n")	
-		groupColumn <- which(channelMatch & !onePerSample)
+		message("  groupColumn column not specified. Trying to guess.")	
+		groupColumn <- which(channelMatch & !onePerSample & numUnique>1)
 		if (length(groupColumn)==1) {
-			cat("  OK - Found in column", groupColumn, "\n")
+			message("  OK - Found in column", groupColumn)
 		} else if (length(groupColumn)==0) {
-			cat("  ERROR - No suitable group label column found. If there are no replicates you can set groupColumn to be the same as sampleNameColumn\n")
-			return(FALSE)
+			msg <- paste(msg,  "No suitable group label column found. If there are no replicates you can set groupColumn to be the same as sampleNameColumn\n")
+			message("  ERROR -", msg, appendLF=FALSE)
+			return(list(status="ERROR", message=msg))	
 		} else if (length(groupColumn)>1) {
 			warning("  WARNING - Multiple columns (", 
 				paste(groupColumn, collapse=", "), 
-				") are candidates for group labels. Arbitrarily choosing column ", 
-				groupColumn[1], ".\n", sep="")
+				") are candidates for group labels.\n", sep="")
 				groupColumn <- groupColumn[1]
 		}
 	} else { # User specified groupColumn
 		if (channelMatch[groupColumn] & !onePerSample[groupColumn]) {
-			cat("  OK - Found in column", groupColumn, "\n")
+			message("  OK - Found in column", groupColumn)
 		} else {
 			if (!channelMatch[groupColumn]) {
-				cat("  ERROR - There are samples with different values in column ", groupColumn, " for their untreated and methyl-depleted rows\n", sep="")
-				return(FALSE)
+				msg <- paste(msg,  "There are samples with different values in column", groupColumn, "for their untreated and methyl-depleted rows\n")
+				message("  ERROR -", msg, appendLF=FALSE)
+				return(list(status="ERROR", message=msg))	
 			} else if (onePerSample[groupColumn]) {
-				cat("  WARNING - Each group has only 1 sample\n")
+				message("  WARNING - Each group has only 1 sample")
 			}
 		}
 	}
-	return(list(fileNameColumn=fileNameColumn, 
+	return(list(status="OK", fileNameColumn=fileNameColumn, 
 			sampleNameColumn=sampleNameColumn,
 			groupColumn=groupColumn))
 }

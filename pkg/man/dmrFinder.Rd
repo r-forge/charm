@@ -7,7 +7,12 @@ Find differentially methylated regions (DMRs)
 Find differentially methylated regions (DMRs) from tiling microarray data.
 }
 \usage{
-dmrFinder(eset=NULL, groups, p=NULL, l=NULL, chr=NULL, pos=NULL, pns=NULL, sdBins=NULL, controlIndex=NULL, controlProbes=c("CONTROL_PROBES", "CONTROL_REGIONS"), Indexes=NULL, filter=NULL, package=NULL, ws=7, verbose=TRUE, compare="all",  withinSampleNorm="loess", betweenSampleNorm="quantile", cutoff=0.995, sortBy="ttarea",...)
+dmrFinder(eset=NULL, groups, p=NULL, l=NULL, chr=NULL, pos=NULL, pns=NULL,
+	sdBins=NULL, controlIndex=NULL, 
+	controlProbes=c("CONTROL_PROBES", "CONTROL_REGIONS"), Indexes=NULL, 
+	filter=NULL, package=NULL, ws=7, verbose=TRUE, compare="all",  
+	withinSampleNorm="loess", betweenSampleNorm="quantile", 
+	cutoff=0.995, sortBy="ttarea",...)
 }
 \arguments{
   \item{eset}{
@@ -78,7 +83,19 @@ This function finds differentially methylated regions (DMRs). The sortby paramet
 }
 \value{
 A list with
-\item{tabs}{A list of DMR tables, one per comparison}
+\item{tabs}{A list of DMR tables, one per comparison with columns:
+	\describe{
+		\item{start}{start of DMR (bp)}
+		\item{end}{end of DMR (bp)}
+		\item{p1}{average percentage methylation of all probes between start and end for group 1}
+		\item{p2}{average percentage methylation of all probes between start and end for group 2}
+		\item{regionName}{name of the tiling region in which the DMR is found (These names come from the NDF file)}
+		\item{indexStart}{index of first probe in DMR}
+		\item{indexEnd}{index of last probe in DMR}
+		\item{area}{(indexEnd-indexStart) x (p1-p2), i.e. length x average difference}	
+		\item{ttarea}{(indexEnd-indexStart) x (average probe level t-stat for between group difference)}		
+	}
+}
 \item{p}{A matrix of percentage methylation estimates (NOTE: the probe order may differ from that of the input p matrix since probes are sorted into chromosomal order)}
 \item{l}{This contains methylation log-ratios if they were passed to the function. Otherwise it contains logit-transformed percentage methylation estimates}
 \item{chr }{a vector of chromosomes corresponding to the rows of p and l}

@@ -7,7 +7,8 @@ Validate a sample description file for two-color microarray data
 Checks a sample description file describing two-color arrays for proper formatting and if requested guesses column numbers for file names, sample labels and group labels.
 }
 \usage{
-validatePd(pd, fileNameColumn, sampleNameColumn, groupColumn, ut = "_532.xys", md = "_635.xys")
+validatePd(pd, fileNameColumn, sampleNameColumn, groupColumn, 
+	ut = "_532.xys", md = "_635.xys")
 }
 \arguments{
   \item{pd}{

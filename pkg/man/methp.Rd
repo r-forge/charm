@@ -8,7 +8,12 @@ Estimate DNA methylation
 Estimate DNA methylation from McrBC/CHARM microarray data in terms of log-ratios or percentages.
 }
 \usage{
-methp(dat, spatial = TRUE, bgSubtract = TRUE, withinSampleNorm = "loess", scale = c(0.99, 0.99), betweenSampleNorm = "quantile", controlProbes = c("CONTROL_PROBES", "CONTROL_REGIONS"), controlIndex = NULL, commonMethPercentParams = NULL, verbose = TRUE, returnM = FALSE, plotDensity = NULL, plotDensityGroups = NULL)
+methp(dat, spatial = TRUE, bgSubtract = TRUE, withinSampleNorm = "loess", 
+	scale = c(0.99, 0.99), betweenSampleNorm = "quantile", 
+	controlProbes = c("CONTROL_PROBES", "CONTROL_REGIONS"), 
+	controlIndex = NULL, commonMethPercentParams = NULL, 
+	verbose = TRUE, returnM = FALSE, 
+	plotDensity = NULL, plotDensityGroups = NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

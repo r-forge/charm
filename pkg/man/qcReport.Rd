@@ -6,7 +6,8 @@ Microarray quality report
 \description{
 Calculate microarray quality scores and produce an optional pdf report}
 \usage{
-qcReport(dat, file = NULL, utRange = c(30, 100), enRange = c(8, 12), numProbes = 5e+05, blockSize)
+qcReport(dat, file = NULL, utRange = c(30, 100), enRange = c(8, 12), 
+	numProbes = 5e+05, blockSize)
 }
 \arguments{
   \item{dat}{

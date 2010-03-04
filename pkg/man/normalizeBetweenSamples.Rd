@@ -8,7 +8,9 @@ Between-sample normalization
 Between-sample normalization for two-color DNA methylation microarray data.
 }
 \usage{
-normalizeBetweenSamples	(dat, m="allQuantiles", untreated="none", enriched="none", controlProbes=c("CONTROL_PROBES", "CONTROL_REGIONS"), controlIndex=NULL, verbose=FALSE)
+normalizeBetweenSamples	(dat, m="allQuantiles", untreated="none",
+	enriched="none", controlProbes=c("CONTROL_PROBES", "CONTROL_REGIONS"), 
+	controlIndex=NULL, verbose=FALSE)
 }
 
 \arguments{

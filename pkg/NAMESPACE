@@ -2,10 +2,27 @@ importClassesFrom(Biobase, eSet, NChannelSet, VersionedBiobase, Versioned)
 importClassesFrom(oligoClasses, TilingFeatureSet)
 
 import(oligo)
+importMethodsFrom(BSgenome, providerVersion)
+importMethodsFrom(Biobase, annotation, pData, rowMedians,
+	sampleNames, "sampleNames<-")
+importMethodsFrom(Biostrings, unmasked, vcountPattern,
+ 	alphabetFrequency)
+importMethodsFrom(IRanges, Views, mad, median,
+	na.exclude, quantile, sd)
+importMethodsFrom(oligoClasses, getM)
 importFrom(preprocessCore, normalize.quantiles)
-importFrom(Biostrings, DNAString, DNAStringSet, alphabetFrequency, unmasked, vcountPattern)
-importFrom(IRanges, narrow, width, Views)
+importFrom(Biostrings, DNAString, DNAStringSet)
+importFrom(IRanges, narrow, width)
 importFrom(siggenes, pi0.est, qvalue.cal)
 importFrom(gtools, combinations)
+importFrom(grDevices, dev.off, pdf)
+importFrom(graphics, abline, layout, legend, lines, par, plot.new,
+	plot.window, text)
+importFrom(methods, new)
+importFrom(stats, density, dnorm, ecdf, lm, loess, loess.control,
+	optimize, pnorm, predict, qt, reshape)
+importFrom(utils, packageDescription, setTxtProgressBar,
+	txtProgressBar)
+
 
 export(bgAdjustBgp, countGC, cpgdensity, dmrFdr, dmrFinder, getControlIndex, methPercent, methp, normalizeBetweenSamples, normalizeWithinSamples, plotDensity, qcReport, readCharm, spatialAdjust, validatePd)
