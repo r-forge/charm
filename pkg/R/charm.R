@@ -1,6 +1,3 @@
-version <- as.numeric(sub(".*\\.(.*)\\..*", "\\1", packageDescription("oligo", field="Version")))
-if (version>=11) pmChr <- oligo:::pmChr
-
 methp <- function(dat, spatial=TRUE, bgSubtract=TRUE,
 		withinSampleNorm="loess",
 		scale=c(0.99, 0.99),
@@ -430,7 +427,7 @@ getControlIndex <- function(dat,
 	    	chr <- pmChr(dat)
 	        pos <- pmPosition(dat)
 	        cpgd <- cpgdensity(subject, chr=chr, pos=pos, 
-				windowSize=noCpGWindow, showProgress=FALSE)
+				windowSize=noCpGWindow)
 	        controlIndex <- which(cpgd==0)
 		}
     }

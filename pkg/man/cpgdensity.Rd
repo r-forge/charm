@@ -7,8 +7,7 @@ Get CpG density for genomic regions
 Calculate the CpG density for a set of windows
 }
 \usage{
-cpgdensity(subject, chr, pos, windowSize = 500, sequence = "CG", 
-	showProgress = FALSE)
+cpgdensity(subject, chr, pos, windowSize = 500, sequence = "CG")
 }
 \arguments{
   \item{subject}{
@@ -24,9 +23,6 @@ number value
 }
   \item{sequence}{
 character string
-}
-  \item{showProgress}{
-boolean
 }
 }
 \details{
